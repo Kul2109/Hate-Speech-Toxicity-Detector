@@ -1,0 +1,152 @@
+Hate Speech Toxicity Detector HISTORY INTEGRATION
+==============================
+
+Your current app.py already has login/register and analysis. Add these pieces.
+
+1. Add near the imports:
+    import json
+
+2. Add this function after init_database():
+
+def init_history_table():
+    connection = get_db()
+    try:
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS analysis_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                analysis_type TEXT NOT NULL,
+                content TEXT DEFAULT '',
+                title TEXT DEFAULT '',
+                prediction TEXT DEFAULT '',
+                confidence REAL DEFAULT 0,
+                categories TEXT DEFAULT '[]',
+                category_counts TEXT DEFAULT '{}',
+                video_id TEXT DEFAULT '',
+                total_comments INTEGER DEFAULT 0,
+                toxic_comments INTEGER DEFAULT 0,
+                non_toxic_comments INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+        connection.commit()
+    finally:
+        connection.close()
+
+Call it immediately after:
+    init_database()
+
+3. Add:
+
+def save_history(user_id, analysis_type, content='', title='', prediction='',
+                 confidence=0, categories=None, category_counts=None,
+                 video_id='', total_comments=0, toxic_comments=0,
+                 non_toxic_comments=0):
+    connection = get_db()
+    try:
+        connection.execute("""
+            INSERT INTO analysis_history
+            (user_id,analysis_type,content,title,prediction,confidence,
+             categories,category_counts,video_id,total_comments,
+             toxic_comments,non_toxic_comments)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+        """, (
+            user_id, analysis_type, content, title, prediction,
+            float(confidence or 0), json.dumps(categories or []),
+            json.dumps(category_counts or {}), video_id,
+            int(total_comments or 0), int(toxic_comments or 0),
+            int(non_toxic_comments or 0)
+        ))
+        connection.commit()
+    finally:
+        connection.close()
+
+4. In api_predict(), after:
+    result = predict_text(text)
+
+add:
+    save_history(
+        session["user_id"], "Text", content=text,
+        prediction=result["prediction"],
+        confidence=result["confidence"],
+        categories=result.get("categories", [])
+    )
+
+5. In api_youtube_analyze(), after the analysis dictionary is available, add:
+
+    save_history(
+        session["user_id"], "YouTube",
+        title=video["title"],
+        prediction="Toxic" if analysis["toxic_comments"] > analysis["non_toxic_comments"] else "Non-Toxic",
+        confidence=analysis["toxic_percentage"],
+        category_counts=analysis["category_counts"],
+        video_id=video["video_id"],
+        total_comments=analysis["total_comments"],
+        toxic_comments=analysis["toxic_comments"],
+        non_toxic_comments=analysis["non_toxic_comments"]
+    )
+
+6. Add this route before the error handlers:
+
+@app.route("/api/history")
+@login_required
+def api_history():
+    connection = get_db()
+    try:
+        rows = connection.execute("""
+            SELECT * FROM analysis_history
+            WHERE user_id=?
+            ORDER BY datetime(created_at) DESC, id DESC
+        """, (session["user_id"],)).fetchall()
+
+        history=[]
+        categories={"toxic":0,"severe_toxic":0,"obscene":0,
+                     "threat":0,"insult":0,"identity_hate":0}
+        toxic=safe=youtube=0
+
+        for row in rows:
+            cats=json.loads(row["categories"] or "[]")
+            counts=json.loads(row["category_counts"] or "{}")
+            for k,v in counts.items():
+                if k in categories:
+                    categories[k]+=int(v or 0)
+            if row["prediction"]=="Toxic":
+                toxic += 1
+            else:
+                safe += 1
+            if row["analysis_type"]=="YouTube":
+                youtube += 1
+
+            history.append({
+                "id":row["id"], "type":row["analysis_type"],
+                "content":row["content"], "title":row["title"],
+                "prediction":row["prediction"], "confidence":row["confidence"],
+                "categories":cats, "category_counts":counts,
+                "video_id":row["video_id"],
+                "total_comments":row["total_comments"],
+                "toxic_comments":row["toxic_comments"],
+                "non_toxic_comments":row["non_toxic_comments"],
+                "created_at":row["created_at"]
+            })
+
+        total=len(history)
+        return jsonify({
+            "success":True,
+            "stats":{
+                "total":total, "toxic":toxic, "safe":safe,
+                "youtube":youtube,
+                "toxic_rate":round((toxic/total)*100,2) if total else 0,
+                "categories":categories
+            },
+            "history":history
+        })
+    finally:
+        connection.close()
+
+IMPORTANT:
+- History is per user because every record stores user_id.
+- Single-text history stores text, prediction, confidence and categories.
+- YouTube history stores video title/id, comment totals and category counts.
+- The supplied templates use your existing route names.
+- Your existing ML model and YouTube code stay unchanged.
