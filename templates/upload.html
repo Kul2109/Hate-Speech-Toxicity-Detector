@@ -1,0 +1,1295 @@
+{% extends "base.html" %}
+
+{% block title %}CSV Analysis | Hate Speech Toxicity Detector{% endblock %}
+
+{% block page_header %}
+
+<div>
+    <h2>CSV Analysis</h2>
+
+    <p class="header-subtitle">
+        Analyze multiple comments or texts in one operation.
+    </p>
+</div>
+
+{% endblock %}
+
+
+{% block content %}
+
+<style>
+
+    .csv-page {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* =========================================================
+       INTRO
+       ========================================================= */
+
+    .csv-intro {
+        margin-bottom: 25px;
+    }
+
+    .csv-intro .pill {
+        display: inline-block;
+        margin-bottom: 10px;
+    }
+
+    .csv-intro h1 {
+        margin: 0 0 8px;
+        font-size: 30px;
+        color: #111827;
+    }
+
+    .csv-intro p {
+        margin: 0;
+        color: #6b7280;
+    }
+
+
+    /* =========================================================
+       UPLOAD CARD
+       ========================================================= */
+
+    .upload-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 8px 25px rgba(0,0,0,.07);
+        margin-bottom: 30px;
+    }
+
+
+    .drop-zone {
+        position: relative;
+        border: 2px dashed #cbd5e1;
+        border-radius: 18px;
+        padding: 45px 25px;
+        text-align: center;
+        background: #f8fafc;
+        transition: .2s ease;
+        cursor: pointer;
+    }
+
+    .drop-zone:hover {
+        border-color: #6366f1;
+        background: #f5f7ff;
+    }
+
+    .drop-zone.selected {
+        border-color: #16a34a;
+        background: #f0fdf4;
+    }
+
+
+    .upload-icon {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto 15px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 50%;
+        background: #eef2ff;
+
+        color: #4f46e5;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+
+    .drop-zone h3 {
+        margin: 0 0 8px;
+        color: #111827;
+    }
+
+    .drop-zone p {
+        margin: 0 0 20px;
+        color: #6b7280;
+    }
+
+
+    .drop-zone input[type="file"] {
+        display: block;
+        margin: 0 auto;
+        max-width: 100%;
+        cursor: pointer;
+    }
+
+
+    .file-name {
+        margin-top: 15px;
+        font-weight: 600;
+        color: #15803d;
+        min-height: 20px;
+    }
+
+
+    .upload-btn {
+        width: 100%;
+        margin-top: 20px;
+    }
+
+
+    /* =========================================================
+       HELP
+       ========================================================= */
+
+    .csv-help {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-top: 25px;
+    }
+
+    .csv-help-item {
+        background: #f8fafc;
+        border-radius: 14px;
+        padding: 16px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .csv-help-item strong {
+        display: block;
+        color: #374151;
+        font-size: 13px;
+        margin-bottom: 5px;
+    }
+
+    .csv-help-item span {
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+
+    /* =========================================================
+       RESULTS HEADER
+       ========================================================= */
+
+    .section-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 30px 0 18px;
+    }
+
+    .section-heading h3 {
+        margin: 0 0 5px;
+        color: #111827;
+        font-size: 22px;
+    }
+
+    .section-heading p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+
+    /* =========================================================
+       STATISTICS
+       ========================================================= */
+
+    .csv-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin-bottom: 25px;
+    }
+
+    .csv-stat-card {
+        background: white;
+        border-radius: 18px;
+        padding: 22px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 6px 20px rgba(0,0,0,.07);
+
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+
+        border-radius: 14px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 20px;
+        font-weight: 800;
+    }
+
+    .stat-icon.blue {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+    .stat-icon.red {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .stat-icon.green {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .stat-icon.purple {
+        background: #ede9fe;
+        color: #7c3aed;
+    }
+
+    .csv-stat-card span {
+        display: block;
+        color: #6b7280;
+        font-size: 13px;
+        margin-bottom: 5px;
+    }
+
+    .csv-stat-card strong {
+        display: block;
+        color: #111827;
+        font-size: 27px;
+        font-weight: 800;
+    }
+
+
+    /* =========================================================
+       CATEGORY SECTION
+       ========================================================= */
+
+    .category-card {
+        background: white;
+        border-radius: 18px;
+        padding: 22px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 6px 20px rgba(0,0,0,.07);
+        margin-bottom: 25px;
+    }
+
+    .category-card h3 {
+        margin: 0 0 18px;
+        color: #111827;
+    }
+
+    .category-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+
+    .category-item {
+        background: #f9fafb;
+        border-radius: 12px;
+        padding: 14px;
+
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .category-item span:first-child {
+        color: #374151;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .category-item span:last-child {
+        color: #dc2626;
+        font-size: 18px;
+        font-weight: 800;
+    }
+
+
+    /* =========================================================
+       TABLE
+       ========================================================= */
+
+    .table-card {
+        background: white;
+        border-radius: 18px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 6px 20px rgba(0,0,0,.07);
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    .table-header {
+        padding: 20px 22px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .table-header h3 {
+        margin: 0 0 5px;
+        color: #111827;
+    }
+
+    .table-header p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    .results-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 900px;
+    }
+
+    .results-table th {
+        background: #f9fafb;
+        color: #6b7280;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+
+        text-align: left;
+        padding: 14px;
+        white-space: nowrap;
+    }
+
+    .results-table td {
+        padding: 14px;
+        border-top: 1px solid #e5e7eb;
+        color: #374151;
+        font-size: 14px;
+        vertical-align: middle;
+    }
+
+    .results-table tbody tr:hover {
+        background: #fafafa;
+    }
+
+
+    /* =========================================================
+       TEXT PREVIEW
+       ========================================================= */
+
+    .input-preview {
+        max-width: 430px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+
+    /* =========================================================
+       BADGES
+       ========================================================= */
+
+    .result-badge {
+        display: inline-block;
+        padding: 6px 11px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .result-badge.toxic {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .result-badge.safe {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .result-badge.error {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+
+    /* =========================================================
+       CONFIDENCE
+       ========================================================= */
+
+    .confidence-wrapper {
+        min-width: 120px;
+    }
+
+    .confidence-text {
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .confidence-bar {
+        height: 6px;
+        background: #e5e7eb;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .confidence-fill {
+        height: 100%;
+        border-radius: 10px;
+        background: #6366f1;
+    }
+
+
+    /* =========================================================
+       EMPTY STATE
+       ========================================================= */
+
+    .empty-state {
+        text-align: center;
+        padding: 45px 20px;
+        color: #6b7280;
+    }
+
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media(max-width: 1000px) {
+
+        .csv-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .category-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .csv-help {
+            grid-template-columns: 1fr;
+        }
+    }
+
+
+    @media(max-width: 600px) {
+
+        .csv-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .category-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .upload-card {
+            padding: 18px;
+        }
+
+        .csv-intro h1 {
+            font-size: 24px;
+        }
+    }
+
+</style>
+
+
+<div class="csv-page">
+
+
+    <!-- =========================================================
+         INTRO
+         ========================================================= -->
+
+    <div class="csv-intro">
+
+        <span class="pill">
+            BULK ANALYSIS
+        </span>
+
+        <h1>
+            Analyze a CSV dataset
+        </h1>
+
+        <p>
+            Upload a CSV file containing comments or text.
+            The Hate Speech Toxicity Detector will classify every accessible row using the trained AI model.
+        </p>
+
+    </div>
+
+
+    <!-- =========================================================
+         UPLOAD CARD
+         ========================================================= -->
+
+    <div class="upload-card">
+
+        <form
+            method="POST"
+            enctype="multipart/form-data"
+            action="{{ url_for('upload') }}"
+        >
+
+            <div
+                class="drop-zone"
+                id="dropZone"
+            >
+
+                <div class="upload-icon">
+                    ↑
+                </div>
+
+                <h3>
+                    Select your CSV file
+                </h3>
+
+                <p>
+                    Click the file selector below to choose a CSV dataset.
+                </p>
+
+                <input
+                    type="file"
+                    name="file"
+                    id="csvFile"
+                    accept=".csv"
+                    required
+                >
+
+                <div
+                    class="file-name"
+                    id="fileName"
+                ></div>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="primary-btn upload-btn"
+                id="analyzeButton"
+            >
+
+                Analyze CSV
+
+                <span>
+                    →
+                </span>
+
+            </button>
+
+        </form>
+
+
+        <!-- =====================================================
+             CSV HELP
+             ===================================================== -->
+
+        <div class="csv-help">
+
+            <div class="csv-help-item">
+
+                <strong>
+                    Supported Format
+                </strong>
+
+                <span>
+                    CSV files only
+                </span>
+
+            </div>
+
+
+            <div class="csv-help-item">
+
+                <strong>
+                    Recommended Column
+                </strong>
+
+                <span>
+                    text / comment_text / comment
+                </span>
+
+            </div>
+
+
+            <div class="csv-help-item">
+
+                <strong>
+                    Maximum File Size
+                </strong>
+
+                <span>
+                    20 MB
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         RESULTS
+         ========================================================= -->
+
+    {% if results %}
+
+        <div class="section-heading">
+
+            <div>
+
+                <h3>
+                    Analysis Results
+                </h3>
+
+                <p>
+                    {{ results|length }} valid rows analyzed successfully.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             CALCULATE COUNTS
+             ===================================================== -->
+
+        {% set toxic_total =
+            results
+            |selectattr('prediction', 'equalto', 'Toxic')
+            |list
+            |length
+        %}
+
+        {% set safe_total =
+            results
+            |selectattr('prediction', 'equalto', 'Non-Toxic')
+            |list
+            |length
+        %}
+
+        {% set error_total =
+            results
+            |selectattr('prediction', 'equalto', 'Error')
+            |list
+            |length
+        %}
+
+        {% set toxicity_rate =
+            ((toxic_total / results|length) * 100)
+            if results|length > 0
+            else 0
+        %}
+
+
+        <!-- =====================================================
+             STATISTICS
+             ===================================================== -->
+
+        <div class="csv-stats">
+
+
+            <!-- TOTAL -->
+
+            <div class="csv-stat-card">
+
+                <div class="stat-icon blue">
+                    #
+                </div>
+
+                <div>
+
+                    <span>
+                        Total Rows
+                    </span>
+
+                    <strong>
+                        {{ results|length }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- TOXIC -->
+
+            <div class="csv-stat-card">
+
+                <div class="stat-icon red">
+                    !
+                </div>
+
+                <div>
+
+                    <span>
+                        Toxic
+                    </span>
+
+                    <strong>
+                        {{ toxic_total }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- NON TOXIC -->
+
+            <div class="csv-stat-card">
+
+                <div class="stat-icon green">
+                    ✓
+                </div>
+
+                <div>
+
+                    <span>
+                        Non-Toxic
+                    </span>
+
+                    <strong>
+                        {{ safe_total }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- TOXICITY RATE -->
+
+            <div class="csv-stat-card">
+
+                <div class="stat-icon purple">
+                    %
+                </div>
+
+                <div>
+
+                    <span>
+                        Toxicity Rate
+                    </span>
+
+                    <strong>
+                        {{ toxicity_rate|round(1) }}%
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             TOXICITY CATEGORIES
+             ===================================================== -->
+
+        <div class="category-card">
+
+            <h3>
+                Detected Toxicity Categories
+            </h3>
+
+            <div class="category-grid">
+
+
+                {% set category_names = {
+                    "toxic": "Toxic",
+                    "severe_toxic": "Severe Toxic",
+                    "obscene": "Obscene",
+                    "threat": "Threat",
+                    "insult": "Insult",
+                    "identity_hate": "Identity Hate"
+                } %}
+
+
+                {% for category in [
+                    "toxic",
+                    "severe_toxic",
+                    "obscene",
+                    "threat",
+                    "insult",
+                    "identity_hate"
+                ] %}
+
+
+                    {% set category_count = namespace(value=0) %}
+
+
+                    {% for row in results %}
+
+                        {% if row.labels and
+                              row.labels.get(category, 0) >= 0.5 %}
+
+                            {% set category_count.value =
+                                category_count.value + 1
+                            %}
+
+                        {% endif %}
+
+                    {% endfor %}
+
+
+                    <div class="category-item">
+
+                        <span>
+                            {{ category_names[category] }}
+                        </span>
+
+                        <span>
+                            {{ category_count.value }}
+                        </span>
+
+                    </div>
+
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             RESULTS TABLE
+             ===================================================== -->
+
+        <div class="table-card">
+
+
+            <div class="table-header">
+
+                <h3>
+                    Row-by-Row Results
+                </h3>
+
+                <p>
+                    Each row shows the detected language, prediction,
+                    confidence and input text.
+                </p>
+
+            </div>
+
+
+            <div class="table-wrapper">
+
+                <table class="results-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                #
+                            </th>
+
+                            <th>
+                                Text
+                            </th>
+
+                            <th>
+                                Language
+                            </th>
+
+                            <th>
+                                Prediction
+                            </th>
+
+                            <th>
+                                Confidence
+                            </th>
+
+                            <th>
+                                Categories
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                    {% for row in results %}
+
+                        <tr>
+
+
+                            <!-- NUMBER -->
+
+                            <td>
+                                {{ loop.index }}
+                            </td>
+
+
+                            <!-- TEXT -->
+
+                            <td>
+
+                                <div
+                                    class="input-preview"
+                                    title="{{ row.text }}"
+                                >
+
+                                    {{ row.text }}
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- LANGUAGE -->
+
+                            <td>
+
+                                <strong>
+                                    {{ row.language|upper }}
+                                </strong>
+
+                            </td>
+
+
+                            <!-- PREDICTION -->
+
+                            <td>
+
+                                {% if row.prediction == "Toxic" %}
+
+                                    <span class="result-badge toxic">
+                                        ● Toxic
+                                    </span>
+
+                                {% elif row.prediction == "Non-Toxic" %}
+
+                                    <span class="result-badge safe">
+                                        ● Non-Toxic
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="result-badge error">
+                                        ● {{ row.prediction }}
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- CONFIDENCE -->
+
+                            <td>
+
+                                <div class="confidence-wrapper">
+
+                                    <div class="confidence-text">
+
+                                        {{ (row.confidence * 100)|round(1) }}%
+
+                                    </div>
+
+                                    <div class="confidence-bar">
+
+                                        <div
+                                            class="confidence-fill"
+                                            style="
+                                                width:
+                                                {{ (row.confidence * 100)|round(2) }}%;
+                                            "
+                                        ></div>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- CATEGORIES -->
+
+                            <td>
+
+                                {% if row.labels %}
+
+                                    {% set detected = [] %}
+
+                                    {% for label, score in row.labels.items() %}
+
+                                        {% if score >= 0.5 %}
+
+                                            {% set detected =
+                                                detected + [
+                                                    category_names.get(
+                                                        label,
+                                                        label
+                                                    )
+                                                ]
+                                            %}
+
+                                        {% endif %}
+
+                                    {% endfor %}
+
+
+                                    {% if detected %}
+
+                                        {{ detected|join(", ") }}
+
+                                    {% else %}
+
+                                        <span style="color:#6b7280;">
+                                            None
+                                        </span>
+
+                                    {% endif %}
+
+                                {% else %}
+
+                                    <span style="color:#6b7280;">
+                                        None
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                        </tr>
+
+                    {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+    {% else %}
+
+
+        <!-- =====================================================
+             EMPTY STATE
+             ===================================================== -->
+
+        <div class="upload-card">
+
+            <div class="empty-state">
+
+                <h3>
+                    No CSV analysis yet
+                </h3>
+
+                <p>
+                    Upload a CSV file above to start bulk toxicity analysis.
+                </p>
+
+            </div>
+
+        </div>
+
+
+    {% endif %}
+
+
+</div>
+
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const fileInput =
+        document.getElementById("csvFile");
+
+    const fileName =
+        document.getElementById("fileName");
+
+    const dropZone =
+        document.getElementById("dropZone");
+
+    const analyzeButton =
+        document.getElementById("analyzeButton");
+
+
+    /* =========================================================
+       FILE SELECTION
+       ========================================================= */
+
+    if (fileInput) {
+
+        fileInput.addEventListener(
+            "change",
+            function () {
+
+                if (this.files.length > 0) {
+
+                    const file =
+                        this.files[0];
+
+                    fileName.textContent =
+                        "Selected: " + file.name;
+
+                    dropZone.classList.add(
+                        "selected"
+                    );
+
+                } else {
+
+                    fileName.textContent = "";
+
+                    dropZone.classList.remove(
+                        "selected"
+                    );
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* =========================================================
+       DROP ZONE
+       ========================================================= */
+
+    if (dropZone && fileInput) {
+
+        dropZone.addEventListener(
+            "dragover",
+            function (event) {
+
+                event.preventDefault();
+
+                dropZone.classList.add(
+                    "selected"
+                );
+
+            }
+        );
+
+
+        dropZone.addEventListener(
+            "dragleave",
+            function () {
+
+                if (
+                    !fileInput.files ||
+                    fileInput.files.length === 0
+                ) {
+
+                    dropZone.classList.remove(
+                        "selected"
+                    );
+
+                }
+
+            }
+        );
+
+
+        dropZone.addEventListener(
+            "drop",
+            function (event) {
+
+                event.preventDefault();
+
+                const files =
+                    event.dataTransfer.files;
+
+                if (files.length > 0) {
+
+                    fileInput.files =
+                        files;
+
+                    const file =
+                        files[0];
+
+                    if (
+                        file.name
+                        .toLowerCase()
+                        .endsWith(".csv")
+                    ) {
+
+                        fileName.textContent =
+                            "Selected: " +
+                            file.name;
+
+                        dropZone.classList.add(
+                            "selected"
+                        );
+
+                    } else {
+
+                        fileName.textContent =
+                            "Please select a CSV file.";
+
+                        dropZone.classList.remove(
+                            "selected"
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* =========================================================
+       SUBMIT BUTTON
+       ========================================================= */
+
+    const uploadForm =
+        document.querySelector(
+            'form[enctype="multipart/form-data"]'
+        );
+
+
+    if (uploadForm && analyzeButton) {
+
+        uploadForm.addEventListener(
+            "submit",
+            function () {
+
+                if (
+                    fileInput &&
+                    fileInput.files.length > 0
+                ) {
+
+                    analyzeButton.disabled = true;
+
+                    analyzeButton.innerHTML =
+                        "Analyzing CSV... <span>⏳</span>";
+
+                }
+
+            }
+        );
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

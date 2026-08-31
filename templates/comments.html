@@ -1,0 +1,5 @@
+{% extends "base.html" %}{% block title %}All Comments | HateSpeechToxicityDetector{% endblock %}{% block heading %}All Comments{% endblock %}
+{% block content %}<div class="card"><div class="card-head"><div><h2>Latest analyzed comments</h2><p class="muted">Every accessible comment/reply from the latest video analysis.</p></div><a class="btn ghost" href="{{url_for('toxic_comments_page')}}">Toxic only</a></div>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Comment</th><th>Author</th><th>Prediction</th><th>Confidence</th><th>Categories</th></tr></thead><tbody>
+{% for c in analysis.get('comments',[]) %}<tr><td>{{c.index}}</td><td class="comment-cell">{{c.text}}</td><td>{{c.author}}</td><td><span class="badge {{'danger' if c.prediction=='Toxic' else 'safe'}}">{{c.prediction}}</span></td><td>{{c.confidence}}%</td><td>{{c.categories|join(', ') if c.categories else '—'}}</td></tr>
+{% else %}<tr><td colspan="6" class="empty">No analyzed comments yet.</td></tr>{% endfor %}</tbody></table></div></div>{% endblock %}

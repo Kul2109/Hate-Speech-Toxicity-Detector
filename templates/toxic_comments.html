@@ -1,0 +1,4 @@
+{% extends "base.html" %}{% block title %}Toxic Comments | ToxiGuard{% endblock %}{% block heading %}Toxic Comments{% endblock %}
+{% block content %}<div class="card"><h2>{{total}} toxic comments</h2><p class="muted">{{video_title}}</p><div class="comment-list">
+{% for c in comments %}<div class="comment-item"><div class="comment-meta"><b>{{c.author}}</b><span class="badge danger">{{c.confidence}}%</span></div><p>{{c.text}}</p><small>{{c.categories|join(', ')}}</small></div>
+{% else %}<div class="empty">No toxic comments in the latest analysis.</div>{% endfor %}</div></div>{% endblock %}

@@ -1,0 +1,503 @@
+{% extends "base.html" %}
+
+{% block title %}
+Hate Speech Toxicity Detector | Login
+{% endblock %}
+
+{% block public_content %}
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: "Inter", Arial, sans-serif;
+        background:
+            radial-gradient(circle at 15% 20%, rgba(79, 70, 229, 0.18), transparent 35%),
+            radial-gradient(circle at 85% 80%, rgba(14, 165, 233, 0.14), transparent 35%),
+            #f8fafc;
+        min-height: 100vh;
+    }
+
+    .auth-page {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 30px 20px;
+    }
+
+    .auth-wrapper {
+        width: 100%;
+        max-width: 1050px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        background: white;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 25px 70px rgba(15, 23, 42, 0.12);
+    }
+
+    /* LEFT SIDE */
+
+    .auth-left {
+        background: linear-gradient(
+            145deg,
+            #111827,
+            #1e1b4b,
+            #312e81
+        );
+        color: white;
+        padding: 55px 50px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .auth-left::before {
+        content: "";
+        position: absolute;
+        width: 280px;
+        height: 280px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.05);
+        top: -100px;
+        right: -100px;
+    }
+
+    .auth-left::after {
+        content: "";
+        position: absolute;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.04);
+        bottom: -80px;
+        left: -80px;
+    }
+
+    .auth-brand {
+        position: relative;
+        z-index: 2;
+        margin-bottom: 35px;
+    }
+
+    .auth-logo {
+        width: 62px;
+        height: 62px;
+        border-radius: 17px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.2);
+        font-size: 22px;
+        font-weight: 800;
+        margin-bottom: 20px;
+    }
+
+    .auth-brand h1 {
+        margin: 0;
+        font-size: 38px;
+        font-weight: 800;
+        letter-spacing: -1px;
+    }
+
+    .auth-brand p {
+        margin-top: 10px;
+        color: rgba(255,255,255,0.7);
+        font-size: 15px;
+    }
+
+    .auth-left h2 {
+        position: relative;
+        z-index: 2;
+        font-size: 30px;
+        line-height: 1.2;
+        margin: 0 0 18px;
+    }
+
+    .auth-left-description {
+        position: relative;
+        z-index: 2;
+        color: rgba(255,255,255,0.72);
+        line-height: 1.7;
+        font-size: 15px;
+        max-width: 420px;
+    }
+
+    .feature-list {
+        position: relative;
+        z-index: 2;
+        margin-top: 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: rgba(255,255,255,0.9);
+        font-size: 14px;
+    }
+
+    .feature-check {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+    }
+
+    /* RIGHT SIDE */
+
+    .auth-right {
+        padding: 55px 55px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .auth-heading {
+        margin-bottom: 32px;
+    }
+
+    .auth-heading h2 {
+        margin: 0 0 8px;
+        color: #111827;
+        font-size: 30px;
+        font-weight: 800;
+    }
+
+    .auth-heading p {
+        margin: 0;
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .input-wrapper {
+        position: relative;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 17px;
+    }
+
+    .form-control {
+        width: 100%;
+        height: 52px;
+        padding: 0 15px 0 45px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        outline: none;
+        font-size: 14px;
+        color: #0f172a;
+        background: #f8fafc;
+        transition: 0.2s;
+    }
+
+    .form-control:focus {
+        border-color: #6366f1;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
+    }
+
+    .login-button {
+        width: 100%;
+        height: 52px;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(
+            135deg,
+            #4f46e5,
+            #6366f1
+        );
+        color: white;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+        margin-top: 5px;
+    }
+
+    .login-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 25px rgba(79,70,229,0.25);
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 25px;
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    .auth-footer a {
+        color: #4f46e5;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+
+    .public-flash-area {
+        margin-bottom: 20px;
+    }
+
+    .public-flash {
+        padding: 13px 15px;
+        border-radius: 10px;
+        font-size: 13px;
+        margin-bottom: 10px;
+    }
+
+    .public-flash-danger {
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+
+    .public-flash-success {
+        background: #f0fdf4;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+    }
+
+    .public-flash-warning {
+        background: #fffbeb;
+        color: #b45309;
+        border: 1px solid #fde68a;
+    }
+
+    @media (max-width: 800px) {
+
+        .auth-wrapper {
+            grid-template-columns: 1fr;
+            max-width: 500px;
+        }
+
+        .auth-left {
+            display: none;
+        }
+
+        .auth-right {
+            padding: 40px 30px;
+        }
+    }
+</style>
+
+
+<div class="auth-page">
+
+    <div class="auth-wrapper">
+
+        <!-- LEFT -->
+
+        <div class="auth-left">
+
+            <div class="auth-brand">
+
+                <div class="auth-logo">
+                    HT
+                </div>
+
+                <h1>Hate Speech Toxicity Detector</h1>
+
+                <p>
+                    AI-Powered Toxicity Detection
+                </p>
+
+            </div>
+
+            <h2>
+                Protect your digital conversations.
+            </h2>
+
+            <p class="auth-left-description">
+                Analyze text, CSV files and YouTube comments
+                using multilingual AI-powered toxicity detection.
+            </p>
+
+            <div class="feature-list">
+
+                <div class="feature-item">
+                    <span class="feature-check">✓</span>
+                    <span>Multilingual toxicity detection</span>
+                </div>
+
+                <div class="feature-item">
+                    <span class="feature-check">✓</span>
+                    <span>CSV bulk analysis</span>
+                </div>
+
+                <div class="feature-item">
+                    <span class="feature-check">✓</span>
+                    <span>YouTube comment analysis</span>
+                </div>
+
+                <div class="feature-item">
+                    <span class="feature-check">✓</span>
+                    <span>Personal analysis history</span>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- RIGHT -->
+
+        <div class="auth-right">
+
+            <div class="auth-heading">
+
+                <h2>
+                    Welcome back
+                </h2>
+
+                <p>
+                    Login to continue to your Hate Speech Toxicity Detector dashboard.
+                </p>
+
+            </div>
+
+
+            <!-- FLASH MESSAGES -->
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+
+                {% if messages %}
+
+                    <div class="public-flash-area">
+
+                        {% for category, message in messages %}
+
+                            <div class="public-flash public-flash-{{ category }}">
+                                {{ message }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+            {% endwith %}
+
+
+            <!-- LOGIN FORM -->
+
+            <form
+                method="POST"
+                action="{{ url_for('login') }}"
+            >
+
+                <div class="form-group">
+
+                    <label for="email">
+                        Username or Email
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <span class="input-icon">
+                            ◉
+                        </span>
+
+                        <input
+                            type="text"
+                            id="email"
+                            name="email"
+                            class="form-control"
+                            placeholder="Enter username or email"
+                            autocomplete="username"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="password">
+                        Password
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <span class="input-icon">
+                            🔒
+                        </span>
+
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            class="form-control"
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="login-button"
+                >
+                    Login to Hate Speech Toxicity Detector
+                </button>
+
+            </form>
+
+
+            <div class="auth-footer">
+
+                Don't have an account?
+
+                <a href="{{ url_for('register') }}">
+                    Create an account
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

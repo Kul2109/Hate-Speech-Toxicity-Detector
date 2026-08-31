@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% block title %}
+        HateSpeechToxicityDetector
+        {% endblock %}
+    </title>
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
+
+    <!-- =====================================================
+         MAIN APPLICATION CSS
+         ===================================================== -->
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+        }
+
+        body {
+            font-family: "Inter", Arial, sans-serif;
+            background: #f5f7fb;
+            color: #172033;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+
+        /* =====================================================
+           PUBLIC PAGES
+           ===================================================== */
+
+        .public-flashes {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            width: 350px;
+        }
+
+        .public-flashes .flash {
+            margin-bottom: 10px;
+        }
+
+
+        /* =====================================================
+           APPLICATION LAYOUT
+           ===================================================== */
+
+        .app-layout {
+            min-height: 100vh;
+            display: flex;
+            background: #f5f7fb;
+        }
+
+
+        /* =====================================================
+           SIDEBAR
+           ===================================================== */
+
+        .sidebar {
+            width: 255px;
+            min-width: 255px;
+            min-height: 100vh;
+
+            background: #111827;
+
+            color: white;
+
+            display: flex;
+            flex-direction: column;
+
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+
+            z-index: 1000;
+        }
+
+
+        /* =====================================================
+           BRAND
+           ===================================================== */
+
+        .brand {
+            height: 90px;
+
+            display: flex;
+            align-items: center;
+
+            padding: 20px 22px;
+
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .brand-icon {
+            width: 45px;
+            height: 45px;
+
+            border-radius: 12px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: linear-gradient(
+                135deg,
+                #6366f1,
+                #4f46e5
+            );
+
+            font-weight: 800;
+            font-size: 16px;
+
+            margin-right: 12px;
+        }
+
+        .brand-text h1 {
+            margin: 0;
+
+            font-size: 19px;
+            font-weight: 800;
+
+            color: white;
+        }
+
+        .brand-text span {
+            display: block;
+
+            margin-top: 3px;
+
+            font-size: 10px;
+
+            color: #94a3b8;
+
+            letter-spacing: 0.3px;
+        }
+
+
+        /* =====================================================
+           NAVIGATION
+           ===================================================== */
+
+        .sidebar-nav {
+            flex: 1;
+
+            padding: 25px 14px;
+
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            padding: 0 12px;
+
+            margin: 15px 0 9px;
+
+            color: #64748b;
+
+            font-size: 10px;
+
+            font-weight: 700;
+
+            letter-spacing: 1.2px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+
+            gap: 12px;
+
+            padding: 12px 13px;
+
+            margin-bottom: 5px;
+
+            border-radius: 10px;
+
+            color: #cbd5e1;
+
+            font-size: 13px;
+
+            font-weight: 500;
+
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.07);
+
+            color: white;
+
+            transform: translateX(2px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(
+                135deg,
+                #4f46e5,
+                #6366f1
+            );
+
+            color: white;
+
+            box-shadow:
+                0 7px 18px rgba(79,70,229,0.25);
+        }
+
+        .nav-icon {
+            width: 25px;
+
+            display: inline-flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            font-size: 17px;
+        }
+
+
+        /* =====================================================
+           SIDEBAR BOTTOM
+           ===================================================== */
+
+        .sidebar-bottom {
+            padding: 15px;
+
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+
+        /* =====================================================
+           MODEL STATUS
+           ===================================================== */
+
+        .model-status {
+            display: flex;
+            align-items: center;
+
+            gap: 10px;
+
+            padding: 11px;
+
+            margin-bottom: 10px;
+
+            border-radius: 10px;
+
+            background: rgba(255,255,255,0.04);
+        }
+
+        .status-dot {
+            width: 9px;
+            height: 9px;
+
+            border-radius: 50%;
+
+            flex-shrink: 0;
+        }
+
+        .status-dot.online {
+            background: #22c55e;
+
+            box-shadow:
+                0 0 8px rgba(34,197,94,0.7);
+        }
+
+        .status-dot.offline {
+            background: #ef4444;
+        }
+
+        .model-status strong {
+            display: block;
+
+            font-size: 11px;
+
+            color: #e2e8f0;
+        }
+
+        .model-status small {
+            display: block;
+
+            margin-top: 2px;
+
+            font-size: 10px;
+
+            color: #64748b;
+        }
+
+
+        /* =====================================================
+           LOGOUT
+           ===================================================== */
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 9px;
+
+            width: 100%;
+
+            padding: 11px;
+
+            border-radius: 10px;
+
+            background: rgba(239,68,68,0.08);
+
+            color: #fca5a5;
+
+            font-size: 12px;
+
+            font-weight: 600;
+
+            transition: 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239,68,68,0.15);
+
+            color: #fecaca;
+        }
+
+
+        /* =====================================================
+           MAIN CONTENT
+           ===================================================== */
+
+        .main-content {
+            margin-left: 255px;
+
+            width: calc(100% - 255px);
+
+            min-height: 100vh;
+
+            background: #f5f7fb;
+        }
+
+
+        /* =====================================================
+           TOPBAR
+           ===================================================== */
+
+        .topbar {
+            height: 76px;
+
+            background: white;
+
+            border-bottom: 1px solid #e5e7eb;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            padding: 0 30px;
+
+            position: sticky;
+
+            top: 0;
+
+            z-index: 100;
+        }
+
+        .topbar-left h2 {
+            margin: 0;
+
+            font-size: 18px;
+
+            font-weight: 700;
+
+            color: #111827;
+        }
+
+
+        /* =====================================================
+           USER AREA
+           ===================================================== */
+
+        .topbar-user {
+            display: flex;
+
+            align-items: center;
+
+            gap: 11px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+
+            border-radius: 50%;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background: #e0e7ff;
+
+            color: #4338ca;
+
+            font-size: 14px;
+
+            font-weight: 700;
+        }
+
+        .user-info strong {
+            display: block;
+
+            font-size: 12px;
+
+            color: #111827;
+
+            max-width: 190px;
+
+            overflow: hidden;
+
+            text-overflow: ellipsis;
+
+            white-space: nowrap;
+        }
+
+        .user-info small {
+            display: block;
+
+            margin-top: 3px;
+
+            font-size: 10px;
+
+            color: #64748b;
+
+            max-width: 190px;
+
+            overflow: hidden;
+
+            text-overflow: ellipsis;
+
+            white-space: nowrap;
+        }
+
+
+        /* =====================================================
+           PAGE CONTAINER
+           ===================================================== */
+
+        .page-container {
+            padding: 30px;
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+
+
+        /* =====================================================
+           FLASH MESSAGES
+           ===================================================== */
+
+        .flash-container {
+            margin-bottom: 20px;
+        }
+
+        .flash {
+            padding: 12px 15px;
+
+            border-radius: 10px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            font-size: 13px;
+
+            margin-bottom: 10px;
+        }
+
+        .flash-success {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #047857;
+        }
+
+        .flash-danger {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+        }
+
+        .flash-warning {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            color: #b45309;
+        }
+
+        .flash-info {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1d4ed8;
+        }
+
+        .flash-icon {
+            font-weight: 800;
+        }
+
+
+        /* =====================================================
+           COMMON CARDS
+           ===================================================== */
+
+        .card {
+            background: white;
+
+            border: 1px solid #e5e7eb;
+
+            border-radius: 16px;
+
+            box-shadow:
+                0 3px 15px rgba(15,23,42,0.03);
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+           ===================================================== */
+
+        @media (max-width: 900px) {
+
+            .sidebar {
+                width: 215px;
+                min-width: 215px;
+            }
+
+            .main-content {
+                margin-left: 215px;
+
+                width: calc(100% - 215px);
+            }
+
+            .topbar {
+                padding: 0 20px;
+            }
+
+            .page-container {
+                padding: 20px;
+            }
+        }
+
+
+        @media (max-width: 700px) {
+
+            .sidebar {
+                width: 70px;
+                min-width: 70px;
+            }
+
+            .brand {
+                justify-content: center;
+                padding: 15px;
+            }
+
+            .brand-text {
+                display: none;
+            }
+
+            .brand-icon {
+                margin: 0;
+            }
+
+            .sidebar-nav {
+                padding: 15px 8px;
+            }
+
+            .nav-section {
+                display: none;
+            }
+
+            .nav-link {
+                justify-content: center;
+                padding: 13px 5px;
+            }
+
+            .nav-link span:not(.nav-icon) {
+                display: none;
+            }
+
+            .nav-icon {
+                font-size: 19px;
+            }
+
+            .model-status {
+                justify-content: center;
+            }
+
+            .model-status div {
+                display: none;
+            }
+
+            .logout-btn span:last-child {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 70px;
+
+                width: calc(100% - 70px);
+            }
+
+            .topbar {
+                padding: 0 15px;
+            }
+
+            .user-info {
+                display: none;
+            }
+
+            .page-container {
+                padding: 15px;
+            }
+        }
+
+    </style>
+
+
+    {% block head %}{% endblock %}
+
+</head>
+
+
+<body>
+
+
+{% if session.get('user_id') %}
+
+<!-- =========================================================
+     LOGGED-IN APPLICATION
+     ========================================================= -->
+
+<div class="app-layout">
+
+
+    <!-- =====================================================
+         SIDEBAR
+         ===================================================== -->
+
+    <aside class="sidebar">
+
+
+        <!-- BRAND -->
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                HT
+            </div>
+
+            <div class="brand-text">
+
+                <h1>
+                    HateSpeech
+                </h1>
+
+                <span>
+                    AI Safety Platform
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- NAVIGATION -->
+
+        <nav class="sidebar-nav">
+
+
+            <div class="nav-section">
+                MAIN
+            </div>
+
+
+            <!-- DASHBOARD -->
+
+            <a href="{{ url_for('dashboard') }}"
+               class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+
+                <span class="nav-icon">
+                    ⌂
+                </span>
+
+                <span>
+                    Dashboard
+                </span>
+
+            </a>
+
+
+            <!-- TEXT -->
+
+            <a href="{{ url_for('predict') }}"
+               class="nav-link {% if request.endpoint == 'predict' %}active{% endif %}">
+
+                <span class="nav-icon">
+                    ✦
+                </span>
+
+                <span>
+                    Text Analysis
+                </span>
+
+            </a>
+
+
+            <!-- CSV -->
+
+            <a href="{{ url_for('upload') }}"
+               class="nav-link {% if request.endpoint == 'upload' %}active{% endif %}">
+
+                <span class="nav-icon">
+                    ▣
+                </span>
+
+                <span>
+                    CSV Analysis
+                </span>
+
+            </a>
+
+
+            <!-- YOUTUBE -->
+
+            <a href="{{ url_for('youtube_analysis') }}"
+               class="nav-link {% if request.endpoint == 'youtube_analysis' %}active{% endif %}">
+
+                <span class="nav-icon">
+                    ▶
+                </span>
+
+                <span>
+                    YouTube Analysis
+                </span>
+
+            </a>
+
+
+            <div class="nav-section">
+                ACTIVITY
+            </div>
+
+            <!-- TWITTER / X -->
+
+            <a href="{{ url_for('twitter_analysis') }}"
+               class="nav-link {% if request.endpoint == 'twitter_analysis' %}active{% endif %}">
+
+               <span class="nav-icon">
+                   𝕏
+               </span>
+
+               <span>
+                  Twitter/X Analysis
+               </span>
+
+            </a>
+
+            <!-- HISTORY -->
+
+            <a href="{{ url_for('history') }}"
+               class="nav-link {% if request.endpoint == 'history' %}active{% endif %}">
+
+                <span class="nav-icon">
+                    ◷
+                </span>
+
+                <span>
+                    History
+                </span>
+
+            </a>
+
+
+            <!-- PROFILE -->
+
+            <a href="{{ url_for('profile') }}"
+               class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}">
+
+                <span class="nav-icon">
+                    ◉
+                </span>
+
+                <span>
+                    Profile
+                </span>
+
+            </a>
+
+        </nav>
+
+
+        <!-- SIDEBAR BOTTOM -->
+
+        <div class="sidebar-bottom">
+
+
+            <div class="model-status">
+
+                <span class="status-dot
+                    {% if model_available %}
+                        online
+                    {% else %}
+                        offline
+                    {% endif %}
+                "></span>
+
+                <div>
+
+                    <strong>
+                        AI Model
+                    </strong>
+
+                    <small>
+
+                        {% if model_available %}
+                            Online
+                        {% else %}
+                            Offline
+                        {% endif %}
+
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <a href="{{ url_for('logout') }}"
+               class="logout-btn">
+
+                <span>
+                    ↪
+                </span>
+
+                <span>
+                    Logout
+                </span>
+
+            </a>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =====================================================
+         MAIN
+         ===================================================== -->
+
+    <main class="main-content">
+
+
+        <!-- TOP BAR -->
+
+        <header class="topbar">
+
+            <div class="topbar-left">
+
+                {% block page_header %}
+
+                <h2>
+                    HateSpeechToxicityDetector
+                </h2>
+
+                {% endblock %}
+
+            </div>
+
+
+            <div class="topbar-user">
+
+                <div class="user-avatar">
+
+                    {{ session.get('username', 'U')[0]|upper }}
+
+                </div>
+
+                <div class="user-info">
+
+                    <strong>
+                        {{ session.get('username', 'User') }}
+                    </strong>
+
+                    <small>
+                        {{ session.get('email', '') }}
+                    </small>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- PAGE -->
+
+        <section class="page-container">
+
+
+            <!-- FLASH -->
+
+            {% with messages = get_flashed_messages(
+                with_categories=true
+            ) %}
+
+                {% if messages %}
+
+                    <div class="flash-container">
+
+                        {% for category, message in messages %}
+
+                            <div class="flash flash-{{ category }}">
+
+                                <span class="flash-icon">
+
+                                    {% if category == 'success' %}
+                                        ✓
+                                    {% elif category == 'danger' %}
+                                        !
+                                    {% elif category == 'warning' %}
+                                        !
+                                    {% else %}
+                                        i
+                                    {% endif %}
+
+                                </span>
+
+                                <span>
+                                    {{ message }}
+                                </span>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+            {% endwith %}
+
+
+            <!-- CHILD PAGE -->
+
+            {% block content %}
+            {% endblock %}
+
+
+        </section>
+
+    </main>
+
+</div>
+
+
+{% else %}
+
+<!-- =========================================================
+     PUBLIC PAGES
+     
+     LOGIN / REGISTER / HOME
+     ========================================================= -->
+
+
+{% with messages = get_flashed_messages(
+    with_categories=true
+) %}
+
+    {% if messages %}
+
+        <div class="public-flashes">
+
+            {% for category, message in messages %}
+
+                <div class="flash flash-{{ category }}">
+
+                    <span class="flash-icon">
+
+                        {% if category == 'success' %}
+                            ✓
+                        {% elif category == 'danger' %}
+                            !
+                        {% elif category == 'warning' %}
+                            !
+                        {% else %}
+                            i
+                        {% endif %}
+
+                    </span>
+
+                    <span>
+                        {{ message }}
+                    </span>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+{% endwith %}
+
+
+{% block public_content %}
+{% endblock %}
+
+
+{% endif %}
+
+
+<!-- =========================================================
+     CHART.JS
+     ========================================================= -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+{% block scripts %}
+{% endblock %}
+
+
+</body>
+
+</html>

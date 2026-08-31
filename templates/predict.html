@@ -1,0 +1,1201 @@
+{% extends "base.html" %}
+
+{% block title %}Text Analysis | Hate Speech Toxicity Detector{% endblock %}
+
+{% block page_header %}
+
+<div>
+    <h2>Text Analysis</h2>
+
+    <p class="header-subtitle">
+        Analyze individual text using the Hate Speech Toxicity Detector AI model.
+    </p>
+</div>
+
+{% endblock %}
+
+
+{% block content %}
+
+<style>
+
+/* =========================================================
+   TEXT ANALYSIS PAGE
+   ========================================================= */
+
+.analysis-page {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   INTRO
+   ========================================================= */
+
+.analysis-intro {
+    background: linear-gradient(
+        135deg,
+        #111827,
+        #1f2937
+    );
+
+    color: white;
+
+    border-radius: 22px;
+
+    padding: 30px;
+
+    margin-bottom: 25px;
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.12);
+}
+
+.analysis-intro .pill {
+    display: inline-block;
+
+    padding: 6px 12px;
+
+    border-radius: 20px;
+
+    background: rgba(255,255,255,.12);
+
+    color: #e5e7eb;
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+    letter-spacing: .7px;
+
+    margin-bottom: 12px;
+}
+
+.analysis-intro h1 {
+    margin: 0 0 8px;
+
+    font-size: 30px;
+
+    font-weight: 800;
+}
+
+.analysis-intro p {
+    margin: 0;
+
+    color: #d1d5db;
+
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   ANALYSIS GRID
+   ========================================================= */
+
+.analysis-grid {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr);
+
+    gap: 22px;
+
+    align-items: start;
+}
+
+
+/* =========================================================
+   INPUT / RESULT CARDS
+   ========================================================= */
+
+.input-card,
+.result-card,
+.result-placeholder {
+
+    background: white;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 20px;
+
+    padding: 25px;
+
+    box-shadow:
+        0 7px 22px rgba(0,0,0,.07);
+}
+
+
+/* =========================================================
+   CARD HEADING
+   ========================================================= */
+
+.card-heading {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: flex-start;
+
+    margin-bottom: 20px;
+}
+
+.card-heading h3 {
+
+    margin: 0 0 5px;
+
+    color: #111827;
+
+    font-size: 20px;
+}
+
+.card-heading p {
+
+    margin: 0;
+
+    color: #6b7280;
+
+    font-size: 13px;
+}
+
+.card-number {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 38px;
+
+    height: 38px;
+
+    border-radius: 12px;
+
+    background: #eef2ff;
+
+    color: #4338ca;
+
+    font-weight: 800;
+
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   TEXTAREA
+   ========================================================= */
+
+.textarea-wrapper {
+
+    position: relative;
+
+    margin-bottom: 18px;
+}
+
+.textarea-wrapper textarea {
+
+    width: 100%;
+
+    min-height: 260px;
+
+    resize: vertical;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d1d5db;
+
+    border-radius: 15px;
+
+    padding: 17px;
+
+    font-family: inherit;
+
+    font-size: 15px;
+
+    line-height: 1.6;
+
+    color: #111827;
+
+    background: #f9fafb;
+
+    outline: none;
+
+    transition: .2s;
+}
+
+.textarea-wrapper textarea:focus {
+
+    border-color: #6366f1;
+
+    background: white;
+
+    box-shadow:
+        0 0 0 3px rgba(99,102,241,.12);
+}
+
+.textarea-wrapper textarea::placeholder {
+
+    color: #9ca3af;
+}
+
+
+/* =========================================================
+   CHARACTER COUNT
+   ========================================================= */
+
+.character-count {
+
+    position: absolute;
+
+    bottom: 10px;
+
+    right: 13px;
+
+    font-size: 12px;
+
+    color: #6b7280;
+
+    background: rgba(255,255,255,.9);
+
+    padding: 3px 7px;
+
+    border-radius: 8px;
+}
+
+
+/* =========================================================
+   BUTTON
+   ========================================================= */
+
+.primary-btn {
+
+    width: 100%;
+
+    border: none;
+
+    border-radius: 13px;
+
+    padding: 14px 18px;
+
+    background: #111827;
+
+    color: white;
+
+    font-size: 15px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition: .2s;
+}
+
+.primary-btn:hover {
+
+    background: #1f2937;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 7px 18px rgba(0,0,0,.15);
+}
+
+.analyze-btn {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 10px;
+}
+
+
+/* =========================================================
+   MAIN RESULT
+   ========================================================= */
+
+.main-result {
+
+    display: grid;
+
+    grid-template-columns:
+        auto
+        1fr
+        auto;
+
+    align-items: center;
+
+    gap: 15px;
+
+    padding: 18px;
+
+    border-radius: 16px;
+
+    margin-bottom: 18px;
+}
+
+.result-toxic {
+
+    background: #fef2f2;
+
+    border: 1px solid #fecaca;
+}
+
+.result-safe {
+
+    background: #f0fdf4;
+
+    border: 1px solid #bbf7d0;
+}
+
+.result-symbol {
+
+    width: 48px;
+
+    height: 48px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 50%;
+
+    font-size: 22px;
+
+    font-weight: 900;
+}
+
+.result-toxic .result-symbol {
+
+    background: #fee2e2;
+
+    color: #dc2626;
+}
+
+.result-safe .result-symbol {
+
+    background: #dcfce7;
+
+    color: #16a34a;
+}
+
+.main-result > div:nth-child(2) span,
+.confidence span {
+
+    display: block;
+
+    color: #6b7280;
+
+    font-size: 12px;
+
+    margin-bottom: 4px;
+}
+
+.main-result > div:nth-child(2) strong {
+
+    font-size: 22px;
+}
+
+.result-toxic > div:nth-child(2) strong {
+
+    color: #dc2626;
+}
+
+.result-safe > div:nth-child(2) strong {
+
+    color: #16a34a;
+}
+
+.confidence {
+
+    text-align: right;
+}
+
+.confidence strong {
+
+    font-size: 18px;
+
+    color: #111827;
+}
+
+
+/* =========================================================
+   INFO GRID
+   ========================================================= */
+
+.result-info-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        1fr
+        1fr;
+
+    gap: 12px;
+
+    margin-bottom: 22px;
+}
+
+.info-box {
+
+    background: #f9fafb;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 13px;
+
+    padding: 14px;
+}
+
+.info-box span {
+
+    display: block;
+
+    font-size: 11px;
+
+    color: #6b7280;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: .5px;
+
+    margin-bottom: 6px;
+}
+
+.info-box strong {
+
+    display: block;
+
+    color: #111827;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+
+    word-break: break-word;
+}
+
+
+/* =========================================================
+   LABEL RESULTS
+   ========================================================= */
+
+.label-results {
+
+    margin-top: 5px;
+}
+
+.label-results h3 {
+
+    margin: 0 0 15px;
+
+    font-size: 17px;
+
+    color: #111827;
+}
+
+.label-row {
+
+    margin-bottom: 15px;
+}
+
+.label-name {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 7px;
+}
+
+.label-name span {
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    color: #374151;
+}
+
+.label-name strong {
+
+    font-size: 13px;
+
+    color: #111827;
+}
+
+.progress {
+
+    width: 100%;
+
+    height: 9px;
+
+    background: #e5e7eb;
+
+    border-radius: 20px;
+
+    overflow: hidden;
+}
+
+.progress-bar {
+
+    height: 100%;
+
+    width: 0;
+
+    background: #6366f1;
+
+    border-radius: 20px;
+
+    transition: width .5s ease;
+}
+
+.progress-bar.danger {
+
+    background: #dc2626;
+}
+
+
+/* =========================================================
+   RESULT ACTIONS
+   ========================================================= */
+
+.result-actions {
+
+    margin-top: 20px;
+
+    padding-top: 18px;
+
+    border-top: 1px solid #e5e7eb;
+}
+
+.secondary-btn {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    text-decoration: none;
+
+    padding: 11px 17px;
+
+    border-radius: 11px;
+
+    background: #f3f4f6;
+
+    color: #111827;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    transition: .2s;
+}
+
+.secondary-btn:hover {
+
+    background: #e5e7eb;
+}
+
+
+/* =========================================================
+   PLACEHOLDER
+   ========================================================= */
+
+.result-placeholder {
+
+    min-height: 430px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    text-align: center;
+
+    color: #6b7280;
+}
+
+.placeholder-icon {
+
+    width: 70px;
+
+    height: 70px;
+
+    border-radius: 20px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background: #eef2ff;
+
+    color: #6366f1;
+
+    font-size: 30px;
+
+    margin-bottom: 18px;
+}
+
+.result-placeholder h3 {
+
+    margin: 0 0 8px;
+
+    color: #111827;
+
+    font-size: 19px;
+}
+
+.result-placeholder p {
+
+    margin: 0;
+
+    font-size: 14px;
+
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   MODEL UNAVAILABLE / ERROR
+   ========================================================= */
+
+.model-error {
+
+    padding: 15px;
+
+    border-radius: 13px;
+
+    background: #fff7ed;
+
+    border: 1px solid #fed7aa;
+
+    color: #9a3412;
+
+    margin-bottom: 18px;
+
+    font-size: 13px;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media(max-width: 1000px) {
+
+    .analysis-grid {
+
+        grid-template-columns: 1fr;
+    }
+
+    .result-placeholder {
+
+        min-height: 300px;
+    }
+}
+
+@media(max-width: 600px) {
+
+    .analysis-intro {
+
+        padding: 22px;
+    }
+
+    .analysis-intro h1 {
+
+        font-size: 24px;
+    }
+
+    .input-card,
+    .result-card,
+    .result-placeholder {
+
+        padding: 18px;
+    }
+
+    .main-result {
+
+        grid-template-columns:
+            auto
+            1fr;
+    }
+
+    .confidence {
+
+        grid-column: 1 / -1;
+
+        text-align: left;
+
+        padding-left: 63px;
+    }
+
+    .result-info-grid {
+
+        grid-template-columns: 1fr;
+    }
+}
+
+</style>
+
+
+<div class="analysis-page">
+
+
+    <!-- =====================================================
+         INTRO
+         ===================================================== -->
+
+    <div class="analysis-intro">
+
+        <span class="pill">
+            AI TEXT DETECTION
+        </span>
+
+        <h1>
+            Analyze a piece of text
+        </h1>
+
+        <p>
+            Enter any comment, message or text.
+            The Hate Speech Toxicity Detector detects toxicity and harmful categories
+            using your trained multilingual model.
+        </p>
+
+    </div>
+
+
+    <!-- =====================================================
+         ANALYSIS GRID
+         ===================================================== -->
+
+    <div class="analysis-grid">
+
+
+        <!-- =================================================
+             INPUT CARD
+             ================================================= -->
+
+        <div class="input-card">
+
+            <div class="card-heading">
+
+                <div>
+
+                    <h3>
+                        Enter Text
+                    </h3>
+
+                    <p>
+                        Your text will be analyzed by the trained model.
+                    </p>
+
+                </div>
+
+                <span class="card-number">
+                    01
+                </span>
+
+            </div>
+
+
+            <form
+                method="POST"
+                action="{{ url_for('predict') }}"
+            >
+
+                <div class="textarea-wrapper">
+
+                    <textarea
+                        name="text"
+                        id="analysisText"
+                        rows="10"
+                        maxlength="5000"
+                        placeholder="Type or paste your text here..."
+                        required
+                    >{{ input_text or '' }}</textarea>
+
+                    <div class="character-count">
+
+                        <span id="charCount">0</span>
+
+                        / 5000
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="primary-btn analyze-btn"
+                >
+
+                    <span>
+                        Analyze Text
+                    </span>
+
+                    <span>
+                        →
+                    </span>
+
+                </button>
+
+            </form>
+
+        </div>
+
+
+        <!-- =================================================
+             RESULT
+             ================================================= -->
+
+        {% if result %}
+
+        <div class="result-card">
+
+            <div class="card-heading">
+
+                <div>
+
+                    <h3>
+                        Analysis Result
+                    </h3>
+
+                    <p>
+                        AI classification result
+                    </p>
+
+                </div>
+
+                <span class="card-number">
+                    02
+                </span>
+
+            </div>
+
+
+            <!-- =============================================
+                 ERROR
+                 ============================================= -->
+
+            {% if result.error %}
+
+            <div class="model-error">
+
+                <strong>
+                    Analysis could not be completed.
+                </strong>
+
+                <br>
+
+                {{ result.error }}
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- =============================================
+                 MAIN RESULT
+                 ============================================= -->
+
+            <div
+                class="
+                    main-result
+                    {% if result.prediction == 'Toxic' %}
+                        result-toxic
+                    {% else %}
+                        result-safe
+                    {% endif %}
+                "
+            >
+
+                <div class="result-symbol">
+
+                    {% if result.prediction == "Toxic" %}
+
+                        !
+
+                    {% elif result.prediction == "Non-Toxic" %}
+
+                        ✓
+
+                    {% else %}
+
+                        ?
+
+                    {% endif %}
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Prediction
+                    </span>
+
+                    <strong>
+                        {{ result.prediction }}
+                    </strong>
+
+                </div>
+
+
+                <div class="confidence">
+
+                    <span>
+                        Confidence
+                    </span>
+
+                    <strong>
+                        {{ "%.1f"|format(
+                            (result.confidence|default(0)|float) * 100
+                        ) }}%
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 LANGUAGE / TRANSLATION
+                 ============================================= -->
+
+            <div class="result-info-grid">
+
+
+                <div class="info-box">
+
+                    <span>
+                        Detected Language
+                    </span>
+
+                    <strong>
+                        {{ result.language|default("en")|upper }}
+                    </strong>
+
+                </div>
+
+
+                <div class="info-box">
+
+                    <span>
+                        Translated Text
+                    </span>
+
+                    <strong>
+
+                        {% if result.translated_text %}
+
+                            {{ result.translated_text[:120] }}
+
+                            {% if result.translated_text|length > 120 %}
+                                ...
+                            {% endif %}
+
+                        {% else %}
+
+                            —
+
+                        {% endif %}
+
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 DETECTED LABELS
+                 ============================================= -->
+
+            {% if result.labels %}
+
+            <div class="label-results">
+
+                <h3>
+                    Toxicity Categories
+                </h3>
+
+
+                {% for label, score in result.labels.items() %}
+
+                <div class="label-row">
+
+                    <div class="label-name">
+
+                        <span>
+
+                            {% if label_display_names is defined %}
+
+                                {{ label_display_names.get(
+                                    label,
+                                    label|replace("_", " ")|title
+                                ) }}
+
+                            {% else %}
+
+                                {{ label|replace("_", " ")|title }}
+
+                            {% endif %}
+
+                        </span>
+
+                        <strong>
+                            {{ "%.1f"|format(
+                                (score|float) * 100
+                            ) }}%
+                        </strong>
+
+                    </div>
+
+
+                    <div class="progress">
+
+                        <div
+                            class="
+                                progress-bar
+                                {% if score|float >= 0.5 %}
+                                    danger
+                                {% endif %}
+                            "
+                            style="
+                                width:
+                                {{ ((score|float) * 100)|round(2) }}%;
+                            "
+                        ></div>
+
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+            {% else %}
+
+            <div class="model-error">
+
+                No category scores are available for this prediction.
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- =============================================
+                 ACTIONS
+                 ============================================= -->
+
+            <div class="result-actions">
+
+                <a
+                    href="{{ url_for('predict') }}"
+                    class="secondary-btn"
+                >
+                    Analyze Another Text
+                </a>
+
+            </div>
+
+        </div>
+
+
+        {% else %}
+
+
+        <!-- =================================================
+             RESULT PLACEHOLDER
+             ================================================= -->
+
+        <div class="result-placeholder">
+
+            <div class="placeholder-icon">
+                ✦
+            </div>
+
+            <h3>
+                Your result will appear here
+            </h3>
+
+            <p>
+                Enter text on the left and click
+                <strong>Analyze Text</strong>.
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const textArea =
+            document.getElementById("analysisText");
+
+        const charCount =
+            document.getElementById("charCount");
+
+
+        if (textArea && charCount) {
+
+            function updateCharacterCount() {
+
+                charCount.textContent =
+                    textArea.value.length;
+
+            }
+
+            updateCharacterCount();
+
+            textArea.addEventListener(
+                "input",
+                updateCharacterCount
+            );
+
+        }
+
+    }
+);
+
+</script>
+
+{% endblock %}

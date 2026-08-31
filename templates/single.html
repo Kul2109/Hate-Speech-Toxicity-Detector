@@ -1,0 +1,5 @@
+{% extends "base.html" %}{% block title %}Single Text | Hate Speech Toxicity Detector{% endblock %}{% block heading %}Single Text Detection{% endblock %}
+{% block content %}<div class="grid-2"><div class="card large-card"><span class="pill">TEXT ANALYSIS</span><h2>Check any paragraph</h2><p class="muted">Paste a sentence, paragraph, comment, or longer text. ToxiGuard evaluates all supported toxicity categories.</p>
+<textarea id="textInput" class="big-text" maxlength="12000" placeholder="Enter your text here..."></textarea><div class="form-row"><span id="charCount" class="muted">0 characters</span><button id="predictBtn" class="btn primary">Analyze Text ✨</button></div><div id="textError" class="error-box hidden"></div></div>
+<div id="resultPanel" class="card result-card"><div class="result-placeholder"><div>🧠</div><h3>Your result will appear here</h3><p>Run an analysis to see prediction, confidence and category scores.</p></div></div></div>{% endblock %}
+{% block scripts %}<script src="{{url_for('static',filename='js/single.js')}}"></script>{% endblock %}

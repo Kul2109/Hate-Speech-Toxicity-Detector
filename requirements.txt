@@ -1,0 +1,15 @@
+flask>=3.1,<4
+flask-cors>=6,<7
+python-dotenv>=1.1,<2
+pandas>=2.2,<3
+numpy>=2.0,<3
+scikit-learn>=1.6,<2
+torch>=2.5,<3
+transformers>=4.56,<5
+datasets>=3.0,<5
+accelerate>=1.2,<2
+safetensors>=0.5,<1
+openpyxl>=3.1,<4
+gunicorn>=23,<24
+requests>=2.32,<3
+google-api-python-client>=2.150,<3

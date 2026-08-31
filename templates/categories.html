@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block title %}Categories | HateSpeechToxicityDetector{% endblock %}{% block heading %}Toxicity Categories{% endblock %}
+{% block content %}<div class="card"><h2>Category-wise analysis</h2><p class="muted">This page reflects the latest saved YouTube analysis.</p><div class="stat-grid six" id="categoryCards">
+{% for x in ['toxic','severe_toxic','obscene','threat','insult','identity_hate'] %}<div class="stat"><span>{{x.replace('_',' ')}}</span><strong>0</strong></div>{% endfor %}</div><div class="chart-wrap tall"><canvas id="latestCategoryChart"></canvas></div></div>{% endblock %}
+{% block scripts %}<script>
+fetch('{{url_for("youtube_summary")}}').then(r=>r.json()).then(d=>{const c=d.category_counts||{};document.querySelectorAll('#categoryCards .stat strong').forEach((x,i)=>x.textContent=Object.values(c)[i]||0);new Chart(document.getElementById('latestCategoryChart'),{type:'bar',data:{labels:Object.keys(c).map(x=>x.replaceAll('_',' ')),datasets:[{label:'Detected',data:Object.values(c)}]},options:{responsive:true,maintainAspectRatio:false}})});
+</script>{% endblock %}

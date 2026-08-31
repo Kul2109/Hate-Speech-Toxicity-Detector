@@ -1,0 +1,1001 @@
+{% extends "base.html" %}
+
+{% block title %}YouTube Analysis | Hate Speech Toxicity Detector{% endblock %}
+
+{% block heading %}YouTube Analysis{% endblock %}
+
+{% block content %}
+
+<style>
+    .youtube-page {
+        max-width: 1250px;
+        margin: 0 auto;
+    }
+
+    .youtube-hero {
+        background: linear-gradient(135deg, #111827, #1f2937);
+        border-radius: 24px;
+        padding: 35px;
+        margin-bottom: 25px;
+        color: white;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+    }
+
+    .youtube-hero h2 {
+        margin: 8px 0 10px;
+        font-size: 30px;
+    }
+
+    .youtube-hero p {
+        margin: 0;
+        color: #cbd5e1;
+        font-size: 15px;
+    }
+
+    .pill {
+        display: inline-block;
+        padding: 7px 13px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.12);
+        color: #e2e8f0;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    .youtube-form-card {
+        background: white;
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+        margin-bottom: 25px;
+    }
+
+    .youtube-form-card h3 {
+        margin-top: 0;
+        margin-bottom: 8px;
+    }
+
+    .youtube-form-card p {
+        color: #64748b;
+        margin-top: 0;
+    }
+
+    .url-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 18px;
+    }
+
+    .url-input {
+        flex: 1;
+        height: 52px;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 0 16px;
+        font-size: 15px;
+        outline: none;
+        box-sizing: border-box;
+    }
+
+    .url-input:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+
+    .analyze-btn {
+        height: 52px;
+        padding: 0 25px;
+        border: none;
+        border-radius: 12px;
+        background: #4f46e5;
+        color: white;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .analyze-btn:hover {
+        background: #4338ca;
+    }
+
+    .analyze-btn:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+    }
+
+    .example-text {
+        margin-top: 10px !important;
+        font-size: 13px;
+        color: #64748b;
+    }
+
+    .alert {
+        padding: 14px 18px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+
+    .alert-danger {
+        background: #fef2f2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    .alert-success {
+        background: #f0fdf4;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+    }
+
+    .alert-warning {
+        background: #fffbeb;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+
+    .video-card {
+        background: white;
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+    }
+
+    .video-title {
+        font-size: 23px;
+        font-weight: 750;
+        margin: 0 0 8px;
+        color: #111827;
+    }
+
+    .channel-name {
+        color: #64748b;
+        margin-bottom: 20px;
+    }
+
+    .video-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+    }
+
+    .video-stat {
+        background: #f8fafc;
+        border-radius: 14px;
+        padding: 18px;
+        text-align: center;
+    }
+
+    .video-stat-value {
+        font-size: 23px;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .video-stat-label {
+        margin-top: 5px;
+        font-size: 12px;
+        color: #64748b;
+    }
+
+    .result-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .result-card {
+        background: white;
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: 0 10px 30px rgba(15,23,42,0.07);
+        border: 1px solid #eef2f7;
+    }
+
+    .result-card .number {
+        font-size: 30px;
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+
+    .result-card .label {
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    .total-card .number {
+        color: #2563eb;
+    }
+
+    .toxic-card .number {
+        color: #dc2626;
+    }
+
+    .non-toxic-card .number {
+        color: #16a34a;
+    }
+
+    .percentage-card .number {
+        color: #7c3aed;
+    }
+
+    .analysis-section {
+        background: white;
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 30px rgba(15,23,42,0.07);
+    }
+
+    .section-title {
+        margin-top: 0;
+        margin-bottom: 18px;
+        font-size: 21px;
+        color: #111827;
+    }
+
+    .category-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .category-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 17px;
+        background: #fafafa;
+    }
+
+    .category-name {
+        font-size: 14px;
+        font-weight: 700;
+        color: #334155;
+    }
+
+    .category-count {
+        font-size: 25px;
+        font-weight: 800;
+        margin-top: 7px;
+        color: #111827;
+    }
+
+    .progress {
+        height: 7px;
+        background: #e5e7eb;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: #ef4444;
+        border-radius: 10px;
+    }
+
+    .comments-table-wrapper {
+        overflow-x: auto;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+    }
+
+    .comments-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 850px;
+    }
+
+    .comments-table th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        padding: 13px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .comments-table td {
+        padding: 13px;
+        border-bottom: 1px solid #eef2f7;
+        font-size: 13px;
+        vertical-align: top;
+    }
+
+    .comments-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .comment-text {
+        max-width: 500px;
+        line-height: 1.5;
+        word-break: break-word;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    .badge-toxic {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .badge-safe {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .reply-badge {
+        background: #e0e7ff;
+        color: #4338ca;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    .confidence {
+        font-weight: 700;
+        color: #475569;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 35px;
+        color: #64748b;
+    }
+
+    .loading-message {
+        display: none;
+        margin-top: 15px;
+        color: #475569;
+        font-size: 14px;
+    }
+
+    @media (max-width: 900px) {
+
+        .result-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .video-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .category-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 650px) {
+
+        .url-row {
+            flex-direction: column;
+        }
+
+        .analyze-btn {
+            width: 100%;
+        }
+
+        .result-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .video-stats {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .category-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .youtube-hero {
+            padding: 25px;
+        }
+
+        .youtube-hero h2 {
+            font-size: 24px;
+        }
+    }
+</style>
+
+
+<div class="youtube-page">
+
+    <!-- ===================================================== -->
+    <!-- HERO -->
+    <!-- ===================================================== -->
+
+    <section class="youtube-hero">
+
+        <span class="pill">
+            FULL COMMENT ANALYSIS
+        </span>
+
+        <h2>
+            Analyze a YouTube Video
+        </h2>
+
+        <p>
+            Enter a YouTube video URL to retrieve all accessible
+            comments and replies and classify them using The Hate Speech Toxicity Detector.
+        </p>
+
+    </section>
+
+
+    <!-- ===================================================== -->
+    <!-- FLASH MESSAGES -->
+    <!-- ===================================================== -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div class="alert
+                    {% if category == 'danger' %}
+                        alert-danger
+                    {% elif category == 'warning' %}
+                        alert-warning
+                    {% else %}
+                        alert-success
+                    {% endif %}
+                ">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- ===================================================== -->
+    <!-- URL FORM -->
+    <!-- ===================================================== -->
+
+    <section class="youtube-form-card">
+
+        <h3>
+            YouTube Video URL
+        </h3>
+
+        <p>
+            Paste the complete YouTube video link below.
+        </p>
+
+        <!-- IMPORTANT:
+             This form submits directly to Flask /youtube.
+             It does NOT call /api/youtube with JavaScript.
+        -->
+
+        <form
+            method="POST"
+            action="{{ url_for('youtube_analysis') }}"
+            id="youtubeForm"
+        >
+
+            <div class="url-row">
+
+                <input
+                    type="text"
+                    name="url"
+                    id="youtubeUrl"
+                    class="url-input"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    autocomplete="off"
+                    required
+                >
+
+                <button
+                    type="submit"
+                    class="analyze-btn"
+                    id="analyzeButton"
+                >
+                    Analyze Video
+                </button>
+
+            </div>
+
+            <p class="example-text">
+                Supported:
+                youtube.com/watch?v=...,
+                youtu.be/...,
+                youtube.com/shorts/...,
+                youtube.com/live/...
+            </p>
+
+            <div
+                class="loading-message"
+                id="loadingMessage"
+            >
+                ⏳ Analyzing the video and retrieving comments.
+                This may take some time for videos with many comments...
+            </div>
+
+        </form>
+
+    </section>
+
+
+    <!-- ===================================================== -->
+    <!-- VIDEO INFORMATION -->
+    <!-- ===================================================== -->
+
+    {% if video %}
+
+    <section class="video-card">
+
+        <h2 class="video-title">
+            {{ video.title or "YouTube Video" }}
+        </h2>
+
+        {% if video.channel %}
+        <div class="channel-name">
+            Channel: {{ video.channel }}
+        </div>
+        {% endif %}
+
+        <div class="video-stats">
+
+            <div class="video-stat">
+
+                <div class="video-stat-value">
+                    {{ "{:,}".format(video.view_count or 0) }}
+                </div>
+
+                <div class="video-stat-label">
+                    Views
+                </div>
+
+            </div>
+
+
+            <div class="video-stat">
+
+                <div class="video-stat-value">
+                    {{ "{:,}".format(video.like_count or 0) }}
+                </div>
+
+                <div class="video-stat-label">
+                    Likes
+                </div>
+
+            </div>
+
+
+            <div class="video-stat">
+
+                <div class="video-stat-value">
+                    {{ "{:,}".format(video.comment_count or 0) }}
+                </div>
+
+                <div class="video-stat-label">
+                    YouTube Comments
+                </div>
+
+            </div>
+
+
+            <div class="video-stat">
+
+                <div class="video-stat-value">
+                    {{ video.published_at[:10] if video.published_at else "N/A" }}
+                </div>
+
+                <div class="video-stat-label">
+                    Published
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    {% endif %}
+
+
+    <!-- ===================================================== -->
+    <!-- ANALYSIS RESULT -->
+    <!-- ===================================================== -->
+
+    {% if result %}
+
+    <section>
+
+        <!-- ================================================= -->
+        <!-- SUMMARY CARDS -->
+        <!-- ================================================= -->
+
+        <div class="result-grid">
+
+            <div class="result-card total-card">
+
+                <div class="number">
+                    {{ "{:,}".format(result.total_comments or 0) }}
+                </div>
+
+                <div class="label">
+                    Total Comments Analyzed
+                </div>
+
+            </div>
+
+
+            <div class="result-card toxic-card">
+
+                <div class="number">
+                    {{ "{:,}".format(result.toxic_comments or 0) }}
+                </div>
+
+                <div class="label">
+                    Toxic Comments
+                </div>
+
+            </div>
+
+
+            <div class="result-card non-toxic-card">
+
+                <div class="number">
+                    {{ "{:,}".format(result.non_toxic_comments or 0) }}
+                </div>
+
+                <div class="label">
+                    Non-Toxic Comments
+                </div>
+
+            </div>
+
+
+            <div class="result-card percentage-card">
+
+                <div class="number">
+                    {{ result.toxic_percentage or 0 }}%
+                </div>
+
+                <div class="label">
+                    Toxic Percentage
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- ANALYSIS INFORMATION -->
+        <!-- ================================================= -->
+
+        <div class="analysis-section">
+
+            <h3 class="section-title">
+                Analysis Summary
+            </h3>
+
+            <div class="video-stats">
+
+                <div class="video-stat">
+
+                    <div class="video-stat-value">
+                        {{ "{:,}".format(result.retrieved_comments or 0) }}
+                    </div>
+
+                    <div class="video-stat-label">
+                        Comments Retrieved
+                    </div>
+
+                </div>
+
+
+                <div class="video-stat">
+
+                    <div class="video-stat-value">
+                        {{ "{:,}".format(result.comments_selected or 0) }}
+                    </div>
+
+                    <div class="video-stat-label">
+                        Comments Selected
+                    </div>
+
+                </div>
+
+
+                <div class="video-stat">
+
+                    <div class="video-stat-value">
+                        {{ result.non_toxic_percentage or 0 }}%
+                    </div>
+
+                    <div class="video-stat-label">
+                        Non-Toxic Percentage
+                    </div>
+
+                </div>
+
+
+                <div class="video-stat">
+
+                    <div class="video-stat-value">
+                        {{ "{:,}".format(result.comments_analyzed or 0) }}
+                    </div>
+
+                    <div class="video-stat-label">
+                        Successfully Analyzed
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- CATEGORY COUNTS -->
+        <!-- ================================================= -->
+
+        <div class="analysis-section">
+
+            <h3 class="section-title">
+                Toxicity Categories
+            </h3>
+
+            <div class="category-grid">
+
+                {% set categories = [
+                    ("toxic", "Toxic"),
+                    ("severe_toxic", "Severe Toxic"),
+                    ("obscene", "Obscene"),
+                    ("threat", "Threat"),
+                    ("insult", "Insult"),
+                    ("identity_hate", "Identity Hate")
+                ] %}
+
+                {% for key, display_name in categories %}
+
+                    {% set count = result.category_counts.get(key, 0) %}
+
+                    <div class="category-card">
+
+                        <div class="category-name">
+                            {{ display_name }}
+                        </div>
+
+                        <div class="category-count">
+                            {{ count }}
+                        </div>
+
+                        <div class="progress">
+
+                            {% if result.total_comments and result.total_comments > 0 %}
+
+                                <div
+                                    class="progress-bar"
+                                    style="width: {{ ((count / result.total_comments) * 100) | round(2) }}%;"
+                                ></div>
+
+                            {% else %}
+
+                                <div
+                                    class="progress-bar"
+                                    style="width: 0%;"
+                                ></div>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- COMMENTS -->
+        <!-- ================================================= -->
+
+        <div class="analysis-section">
+
+            <h3 class="section-title">
+                Analyzed Comments
+            </h3>
+
+            {% if result.comments %}
+
+            <div class="comments-table-wrapper">
+
+                <table class="comments-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                #
+                            </th>
+
+                            <th>
+                                Author
+                            </th>
+
+                            <th>
+                                Comment
+                            </th>
+
+                            <th>
+                                Type
+                            </th>
+
+                            <th>
+                                Prediction
+                            </th>
+
+                            <th>
+                                Confidence
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for comment in result.comments %}
+
+                        <tr>
+
+                            <td>
+                                {{ loop.index }}
+                            </td>
+
+                            <td>
+                                {{ comment.author or "Unknown" }}
+                            </td>
+
+                            <td>
+
+                                <div class="comment-text">
+                                    {{ comment.text }}
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                {% if comment.is_reply %}
+
+                                    <span class="reply-badge">
+                                        REPLY
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="reply-badge">
+                                        COMMENT
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                {% if comment.prediction == "Toxic" %}
+
+                                    <span class="badge badge-toxic">
+                                        Toxic
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge badge-safe">
+                                        Non-Toxic
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                <span class="confidence">
+
+                                    {{ (comment.confidence * 100) | round(1) }}%
+
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+                <div class="empty-state">
+                    No comments were available for analysis.
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </section>
+
+    {% endif %}
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- ONLY SMALL FORM SCRIPT -->
+<!-- ========================================================= -->
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const form = document.getElementById("youtubeForm");
+    const button = document.getElementById("analyzeButton");
+    const loading = document.getElementById("loadingMessage");
+    const input = document.getElementById("youtubeUrl");
+
+    if (!form) {
+        return;
+    }
+
+    form.addEventListener("submit", function () {
+
+        /*
+         * IMPORTANT:
+         *
+         * We are NOT validating the YouTube URL in JavaScript.
+         *
+         * Flask's extract_youtube_video_id() is the single
+         * source of URL validation.
+         */
+
+        if (!input.value.trim()) {
+            return;
+        }
+
+        button.disabled = true;
+        button.innerHTML = "Analyzing...";
+
+        if (loading) {
+            loading.style.display = "block";
+        }
+
+    });
+
+});
+
+</script>
+
+{% endblock %}

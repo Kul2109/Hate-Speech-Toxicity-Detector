@@ -1,0 +1,4 @@
+{% extends "base.html" %}{% block title %}Non-Toxic Comments | Hate Speech Toxicity Detector{% endblock %}{% block heading %}Non-Toxic Comments{% endblock %}
+{% block content %}<div class="card"><h2>{{total}} non-toxic comments</h2><p class="muted">{{video_title}}</p><div class="comment-list">
+{% for c in comments %}<div class="comment-item"><div class="comment-meta"><b>{{c.author}}</b><span class="badge safe">{{c.confidence}}%</span></div><p>{{c.text}}</p><small>{{c.categories|join(', ') if c.categories else 'No toxicity category detected'}}</small></div>
+{% else %}<div class="empty">No non-toxic comments in the latest analysis.</div>{% endfor %}</div></div>{% endblock %}

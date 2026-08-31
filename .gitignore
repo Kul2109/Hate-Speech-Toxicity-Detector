@@ -1,0 +1,41 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+data/raw/*.csv
+data/processed/*.csv
+models/*
+!models/.gitkeep
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+
+data/raw/*.csv
+data/processed/*.csv
+
+models/*
+!models/.gitkeep
+
+# Trained model at project root
+final_distilbert_toxicity_model/
+
+# Databases
+*.db
+
+# Uploaded/generated files
+uploads/
+
+# Local Twitter environment
+twitter_env/
+
+# Training/output files
+training/
+
+# Large/local datasets
+train.csv
+test.csv
+test_labels.csv
+sample_submission.csv

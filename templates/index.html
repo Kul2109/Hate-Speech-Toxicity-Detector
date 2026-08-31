@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Hate Speech Toxicity Detector - YouTube Toxicity Analyzer</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+
+        .youtube-form {
+            margin-top: 25px;
+            padding: 25px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+
+        .youtube-form h2 {
+            margin-bottom: 8px;
+        }
+
+        .youtube-form p {
+            color: #6b7280;
+            margin-bottom: 18px;
+        }
+
+        .url-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .url-input {
+            flex: 1;
+            padding: 14px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .url-input:focus {
+            border-color: #dc2626;
+        }
+
+        .analyze-btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 10px;
+            background: #dc2626;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .analyze-btn:hover {
+            background: #b91c1c;
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .video-info {
+            margin-top: 20px;
+            padding: 18px;
+            background: #f9fafb;
+            border-radius: 12px;
+            display: none;
+        }
+
+        .video-info strong {
+            color: #111827;
+        }
+
+        .result-message {
+            margin-top: 15px;
+            padding: 14px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .success-message {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .loading-message {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .status-toxic {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-safe {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .comment-list {
+            margin-top: 25px;
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+
+        .comment-item {
+            padding: 14px;
+            margin-top: 10px;
+            border-radius: 10px;
+            background: #f9fafb;
+            border-left: 4px solid #16a34a;
+        }
+
+        .comment-item.toxic {
+            border-left-color: #dc2626;
+        }
+
+        .comment-text {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .comment-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        @media(max-width: 700px) {
+
+            .url-row {
+                flex-direction: column;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<aside class="sidebar">
+
+    <div class="brand">
+
+        <div class="brand-icon">
+            🛡️
+        </div>
+
+        <div>
+
+            <h2>Hate Speech Toxicity Detector</h2>
+
+            <span>
+                AI Content Analyzer
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <nav class="navigation">
+
+        <a href="/" class="nav-item active">
+            <span>📊</span>
+            Dashboard
+        </a>
+
+        <a href="#youtube" class="nav-item">
+            <span>▶️</span>
+            YouTube Analysis
+        </a>
+
+        <a href="#categories" class="nav-item">
+            <span>🧠</span>
+            Categories
+        </a>
+
+    </nav>
+
+
+    <div class="sidebar-bottom">
+
+        <div class="status-dot"></div>
+
+        <div>
+
+            <strong>
+                System Online
+            </strong>
+
+            <small>
+                AI Model Active
+            </small>
+
+        </div>
+
+    </div>
+
+</aside>
+
+
+<main class="main-content">
+
+    <header class="top-header">
+
+        <div>
+
+            <p class="eyebrow">
+                NLP • MACHINE LEARNING
+            </p>
+
+            <h1>
+                YouTube Toxicity Dashboard
+            </h1>
+
+            <p class="subtitle">
+                Analyze YouTube comments using our
+                fine-tuned DistilBERT toxicity detection model.
+            </p>
+
+        </div>
+
+        <button class="refresh-btn"
+                onclick="loadSummary()">
+
+            ↻ Refresh
+
+        </button>
+
+    </header>
+
+
+    <!-- ================================================= -->
+    <!-- YOUTUBE ANALYSIS -->
+    <!-- ================================================= -->
+
+    <section id="youtube"
+             class="youtube-form">
+
+        <h2>
+            ▶️ Analyze YouTube Video
+        </h2>
+
+        <p>
+            Enter a YouTube video URL to collect and analyze
+            its comments using AI.
+        </p>
+
+
+        <div class="url-row">
+
+            <input
+                type="text"
+                id="youtubeUrl"
+                class="url-input"
+                placeholder="https://www.youtube.com/watch?v=..."
+            >
+
+            <button
+                id="analyzeButton"
+                class="analyze-btn"
+                onclick="analyzeYouTube()">
+
+                Analyze Comments
+
+            </button>
+
+        </div>
+
+
+        <div id="resultMessage"
+             class="result-message">
+        </div>
+
+
+        <div id="videoInfo"
+             class="video-info">
+
+            <div>
+                <strong>Video:</strong>
+                <span id="videoTitle"></span>
+            </div>
+
+            <div style="margin-top:8px;">
+                <strong>Channel:</strong>
+                <span id="videoChannel"></span>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- LOADING -->
+    <!-- ================================================= -->
+
+    <div id="loading"
+         class="loading-box">
+
+        <div class="spinner"></div>
+
+        <span>
+            Loading YouTube analysis...
+        </span>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- ERROR -->
+    <!-- ================================================= -->
+
+    <div id="errorBox"
+         class="error-box hidden">
+
+        <strong>
+            Unable to load analysis
+        </strong>
+
+        <p id="errorMessage"></p>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- DASHBOARD -->
+    <!-- ================================================= -->
+
+    <section id="dashboard"
+             class="hidden">
+
+
+        <!-- SOURCE -->
+
+        <div class="source-banner">
+
+            <div class="source-left">
+
+                <div class="youtube-icon">
+                    ▶
+                </div>
+
+                <div>
+
+                    <span class="source-label">
+                        DATA SOURCE
+                    </span>
+
+                    <h3>
+                        YouTube Comments
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <div class="source-status">
+
+                <span class="live-dot"></span>
+
+                Analysis Complete
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- STAT CARDS -->
+        <!-- ================================================= -->
+
+        <section class="stats-grid">
+
+
+            <div class="stat-card total-card">
+
+                <div class="stat-top">
+
+                    <span class="stat-title">
+                        Total Comments
+                    </span>
+
+                    <div class="stat-icon">
+                        💬
+                    </div>
+
+                </div>
+
+                <div class="stat-value"
+                     id="totalComments">
+
+                    0
+
+                </div>
+
+                <p class="stat-description">
+                    Comments analyzed
+                </p>
+
+            </div>
+
+
+            <div class="stat-card toxic-card">
+
+                <div class="stat-top">
+
+                    <span class="stat-title">
+                        Toxic Comments
+                    </span>
+
+                    <div class="stat-icon">
+                        ⚠️
+                    </div>
+
+                </div>
+
+                <div class="stat-value"
+                     id="toxicComments">
+
+                    0
+
+                </div>
+
+                <p class="stat-description">
+
+                    <span id="toxicPercentage">
+                        0
+                    </span>% of total comments
+
+                </p>
+
+            </div>
+
+
+            <div class="stat-card safe-card">
+
+                <div class="stat-top">
+
+                    <span class="stat-title">
+                        Non-Toxic Comments
+                    </span>
+
+                    <div class="stat-icon">
+                        ✓
+                    </div>
+
+                </div>
+
+                <div class="stat-value"
+                     id="nonToxicComments">
+
+                    0
+
+                </div>
+
+                <p class="stat-description">
+
+                    <span id="nonToxicPercentage">
+                        0
+                    </span>% of total comments
+
+                </p>
+
+            </div>
+
+
+            <div class="stat-card rate-card">
+
+                <div class="stat-top">
+
+                    <span class="stat-title">
+                        Toxicity Rate
+                    </span>
+
+                    <div class="stat-icon">
+                        📈
+                    </div>
+
+                </div>
+
+                <div class="stat-value">
+
+                    <span id="toxicityRate">
+                        0
+                    </span>%
+
+                </div>
+
+                <p class="stat-description">
+                    Overall toxicity level
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- CHARTS -->
+        <!-- ================================================= -->
+
+        <section class="charts-grid">
+
+
+            <div class="chart-card">
+
+                <div class="chart-header">
+
+                    <div>
+
+                        <span class="section-label">
+                            COMMENT DISTRIBUTION
+                        </span>
+
+                        <h2>
+                            Toxic vs Non-Toxic
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div class="pie-container">
+
+                    <canvas id="toxicityChart"></canvas>
+
+                </div>
+
+
+                <div class="chart-summary">
+
+                    <div class="legend-item">
+
+                        <span class="legend-dot safe-dot"></span>
+
+                        <div>
+
+                            <strong>
+                                Non-Toxic
+                            </strong>
+
+                            <span id="legendNonToxic">
+                                0 comments
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="legend-item">
+
+                        <span class="legend-dot toxic-dot"></span>
+
+                        <div>
+
+                            <strong>
+                                Toxic
+                            </strong>
+
+                            <span id="legendToxic">
+                                0 comments
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="chart-card"
+                 id="categories">
+
+                <div class="chart-header">
+
+                    <div>
+
+                        <span class="section-label">
+                            TOXICITY CATEGORIES
+                        </span>
+
+                        <h2>
+                            Category Analysis
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div class="bar-container">
+
+                    <canvas id="categoryChart"></canvas>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- CATEGORY TABLE -->
+        <!-- ================================================= -->
+
+        <section class="table-card">
+
+            <div class="table-header">
+
+                <div>
+
+                    <span class="section-label">
+                        DETAILED ANALYSIS
+                    </span>
+
+                    <h2>
+                        Toxicity Categories
+                    </h2>
+
+                </div>
+
+                <span class="badge">
+                    AI Classification
+                </span>
+
+            </div>
+
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                    <tr>
+
+                        <th>
+                            Category
+                        </th>
+
+                        <th>
+                            Comments
+                        </th>
+
+                        <th>
+                            Percentage of Total
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                    </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                    <tr>
+
+                        <td>
+                            Toxic
+                        </td>
+
+                        <td id="tableToxic">
+                            0
+                        </td>
+
+                        <td id="tableToxicPercentage">
+                            0%
+                        </td>
+
+                        <td>
+                            <span class="status toxic-status">
+                                Detected
+                            </span>
+                        </td>
+
+                    </tr>
+
+
+                    <tr>
+
+                        <td>
+                            Insult
+                        </td>
+
+                        <td id="tableInsult">
+                            0
+                        </td>
+
+                        <td id="tableInsultPercentage">
+                            0%
+                        </td>
+
+                        <td>
+                            <span class="status warning-status">
+                                Detected
+                            </span>
+                        </td>
+
+                    </tr>
+
+
+                    <tr>
+
+                        <td>
+                            Obscene
+                        </td>
+
+                        <td id="tableObscene">
+                            0
+                        </td>
+
+                        <td id="tableObscenePercentage">
+                            0%
+                        </td>
+
+                        <td>
+                            <span class="status warning-status">
+                                Detected
+                            </span>
+                        </td>
+
+                    </tr>
+
+
+                    <tr>
+
+                        <td>
+                            Threat
+                        </td>
+
+                        <td id="tableThreat">
+                            0
+                        </td>
+
+                        <td id="tableThreatPercentage">
+                            0%
+                        </td>
+
+                        <td>
+                            <span class="status safe-status">
+                                Clear
+                            </span>
+                        </td>
+
+                    </tr>
+
+
+                    <tr>
+
+                        <td>
+                            Identity Hate
+                        </td>
+
+                        <td id="tableIdentityHate">
+                            0
+                        </td>
+
+                        <td id="tableIdentityHatePercentage">
+                            0%
+                        </td>
+
+                        <td>
+                            <span class="status safe-status">
+                                Clear
+                            </span>
+                        </td>
+
+                    </tr>
+
+
+                    <tr>
+
+                        <td>
+                            Severe Toxic
+                        </td>
+
+                        <td id="tableSevereToxic">
+                            0
+                        </td>
+
+                        <td id="tableSevereToxicPercentage">
+                            0%
+                        </td>
+
+                        <td>
+                            <span class="status safe-status">
+                                Clear
+                            </span>
+                        </td>
+
+                    </tr>
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- COMMENT RESULTS -->
+        <!-- ================================================= -->
+
+        <section class="comment-list">
+
+            <div class="table-header">
+
+                <div>
+
+                    <span class="section-label">
+                        COMMENT RESULTS
+                    </span>
+
+                    <h2>
+                        Analyzed Comments
+                    </h2>
+
+                </div>
+
+            </div>
+
+
+            <div id="commentsContainer">
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- AI INSIGHT -->
+        <!-- ================================================= -->
+
+        <section class="insight-card">
+
+            <div class="insight-icon">
+                💡
+            </div>
+
+            <div>
+
+                <span class="section-label">
+                    AI GENERATED INSIGHT
+                </span>
+
+                <h3 id="insightTitle">
+                    Analysis Summary
+                </h3>
+
+                <p id="insightText">
+                    Loading analysis...
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <footer>
+
+            <span>
+                Hate Speech Toxicity Detector • Multilingual Hate Speech & Toxicity Detection
+            </span>
+
+            <span>
+                Powered by NLP & Machine Learning
+            </span>
+
+        </footer>
+
+
+    </section>
+
+</main>
+
+
+<script>
+
+let toxicityChart = null;
+let categoryChart = null;
+
+
+/* =========================================================
+   SHOW MESSAGE
+========================================================= */
+
+function showMessage(message, type) {
+
+    const box =
+        document.getElementById("resultMessage");
+
+    box.textContent = message;
+
+    box.className =
+        "result-message " + type;
+
+    box.style.display = "block";
+}
+
+
+/* =========================================================
+   YOUTUBE ANALYSIS
+========================================================= */
+
+async function analyzeYouTube() {
+
+    const url =
+        document.getElementById("youtubeUrl").value.trim();
+
+    const button =
+        document.getElementById("analyzeButton");
+
+    if (!url) {
+
+        showMessage(
+            "Please enter a YouTube URL.",
+            "error-message"
+        );
+
+        return;
+    }
+
+
+    button.disabled = true;
+
+    button.textContent =
+        "Analyzing...";
+
+
+    showMessage(
+        "Collecting YouTube comments and running ML analysis. Please wait...",
+        "loading-message"
+    );
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/youtube/analyze",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        url: url
+                    })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok || !data.success) {
+
+            throw new Error(
+                data.error ||
+                "YouTube analysis failed."
+            );
+
+        }
+
+
+        /* VIDEO INFORMATION */
+
+        document.getElementById(
+            "videoInfo"
+        ).style.display = "block";
+
+
+        document.getElementById(
+            "videoTitle"
+        ).textContent =
+            data.video?.title || "Unknown";
+
+
+        document.getElementById(
+            "videoChannel"
+        ).textContent =
+            data.video?.channel || "Unknown";
+
+
+        /* UPDATE DASHBOARD */
+
+        updateDashboard(data);
+
+
+        document.getElementById(
+            "loading"
+        ).classList.add("hidden");
+
+
+        document.getElementById(
+            "dashboard"
+        ).classList.remove("hidden");
+
+
+        showMessage(
+
+            "✓ YouTube analysis completed. " +
+
+            "Total: " +
+            data.total_comments +
+
+            " | Toxic: " +
+            data.toxic_comments +
+
+            " | Non-Toxic: " +
+            data.non_toxic_comments,
+
+            "success-message"
+
+        );
+
+
+        document.getElementById(
+            "dashboard"
+        ).scrollIntoView({
+            behavior: "smooth"
+        });
+
+    }
+
+
+    catch (error) {
+
+        console.error(
+            "YouTube analysis error:",
+            error
+        );
+
+
+        showMessage(
+            error.message,
+            "error-message"
+        );
+
+    }
+
+
+    finally {
+
+        button.disabled = false;
+
+        button.textContent =
+            "Analyze Comments";
+
+    }
+
+}
+
+
+/* =========================================================
+   LOAD PREVIOUS SUMMARY
+========================================================= */
+
+async function loadSummary() {
+
+    const loading =
+        document.getElementById("loading");
+
+    const dashboard =
+        document.getElementById("dashboard");
+
+    const errorBox =
+        document.getElementById("errorBox");
+
+
+    loading.classList.remove("hidden");
+
+    dashboard.classList.add("hidden");
+
+    errorBox.classList.add("hidden");
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/youtube/summary"
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok || !data.success) {
+
+            throw new Error(
+                data.error ||
+                "No analysis available."
+            );
+
+        }
+
+
+        updateDashboard(data);
+
+
+        loading.classList.add("hidden");
+
+        dashboard.classList.remove("hidden");
+
+    }
+
+
+    catch (error) {
+
+        loading.classList.add("hidden");
+
+        errorBox.classList.remove("hidden");
+
+        document.getElementById(
+            "errorMessage"
+        ).textContent =
+            error.message;
+
+    }
+
+}
+
+
+/* =========================================================
+   UPDATE DASHBOARD
+========================================================= */
+
+function updateDashboard(data) {
+
+    const total =
+        Number(data.total_comments || 0);
+
+    const toxic =
+        Number(data.toxic_comments || 0);
+
+    /*
+       IMPORTANT:
+       Always calculate non-toxic from total
+       when possible.
+    */
+
+    const nonToxic =
+        Number.isFinite(
+            Number(data.non_toxic_comments)
+        )
+        ? Number(data.non_toxic_comments)
+        : Math.max(
+            0,
+            total - toxic
+        );
+
+
+    const toxicPercentage =
+        total > 0
+        ? (toxic / total) * 100
+        : 0;
+
+
+    const nonToxicPercentage =
+        total > 0
+        ? (nonToxic / total) * 100
+        : 0;
+
+
+    /* STAT CARDS */
+
+    document.getElementById(
+        "totalComments"
+    ).textContent =
+        total.toLocaleString();
+
+
+    document.getElementById(
+        "toxicComments"
+    ).textContent =
+        toxic.toLocaleString();
+
+
+    document.getElementById(
+        "nonToxicComments"
+    ).textContent =
+        nonToxic.toLocaleString();
+
+
+    document.getElementById(
+        "toxicPercentage"
+    ).textContent =
+        toxicPercentage.toFixed(2);
+
+
+    document.getElementById(
+        "nonToxicPercentage"
+    ).textContent =
+        nonToxicPercentage.toFixed(2);
+
+
+    document.getElementById(
+        "toxicityRate"
+    ).textContent =
+        toxicPercentage.toFixed(2);
+
+
+    /* LEGEND */
+
+    document.getElementById(
+        "legendToxic"
+    ).textContent =
+        toxic + " comments";
+
+
+    document.getElementById(
+        "legendNonToxic"
+    ).textContent =
+        nonToxic + " comments";
+
+
+    /* CATEGORIES */
+
+    const categories =
+        data.category_counts || {};
+
+
+    const categoryData = {
+
+        toxic:
+            Number(categories.toxic || 0),
+
+        obscene:
+            Number(categories.obscene || 0),
+
+        insult:
+            Number(categories.insult || 0),
+
+        threat:
+            Number(categories.threat || 0),
+
+        identity_hate:
+            Number(categories.identity_hate || 0),
+
+        severe_toxic:
+            Number(categories.severe_toxic || 0)
+
+    };
+
+
+    updateCategoryTable(
+        categoryData,
+        total
+    );
+
+
+    createToxicityChart(
+        toxic,
+        nonToxic
+    );
+
+
+    createCategoryChart(
+        categoryData
+    );
+
+
+    generateInsight(
+        total,
+        toxic,
+        nonToxic,
+        toxicPercentage,
+        categoryData
+    );
+
+
+    /* COMMENTS */
+
+    if (data.comments) {
+
+        displayComments(
+            data.comments
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   CATEGORY TABLE
+========================================================= */
+
+function updateCategoryTable(
+    categories,
+    total
+) {
+
+    const rows = [
+
+        [
+            "tableToxic",
+            "tableToxicPercentage",
+            categories.toxic
+        ],
+
+        [
+            "tableInsult",
+            "tableInsultPercentage",
+            categories.insult
+        ],
+
+        [
+            "tableObscene",
+            "tableObscenePercentage",
+            categories.obscene
+        ],
+
+        [
+            "tableThreat",
+            "tableThreatPercentage",
+            categories.threat
+        ],
+
+        [
+            "tableIdentityHate",
+            "tableIdentityHatePercentage",
+            categories.identity_hate
+        ],
+
+        [
+            "tableSevereToxic",
+            "tableSevereToxicPercentage",
+            categories.severe_toxic
+        ]
+
+    ];
+
+
+    rows.forEach(function(row) {
+
+        const value =
+            Number(row[2] || 0);
+
+
+        document.getElementById(
+            row[0]
+        ).textContent =
+            value;
+
+
+        const percentage =
+            total > 0
+            ? ((value / total) * 100).toFixed(2)
+            : "0.00";
+
+
+        document.getElementById(
+            row[1]
+        ).textContent =
+            percentage + "%";
+
+    });
+
+}
+
+
+/* =========================================================
+   TOXICITY CHART
+========================================================= */
+
+function createToxicityChart(
+    toxic,
+    nonToxic
+) {
+
+    const canvas =
+        document.getElementById(
+            "toxicityChart"
+        );
+
+
+    if (toxicityChart) {
+
+        toxicityChart.destroy();
+
+    }
+
+
+    toxicityChart =
+        new Chart(
+            canvas,
+            {
+
+                type: "doughnut",
+
+                data: {
+
+                    labels: [
+                        "Non-Toxic",
+                        "Toxic"
+                    ],
+
+                    datasets: [{
+
+                        data: [
+                            nonToxic,
+                            toxic
+                        ],
+
+                        backgroundColor: [
+                            "#16a34a",
+                            "#dc2626"
+                        ],
+
+                        borderWidth: 0
+
+                    }]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    cutout: "68%",
+
+                    plugins: {
+
+                        legend: {
+                            display: false
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+   CATEGORY CHART
+========================================================= */
+
+function createCategoryChart(
+    categories
+) {
+
+    const canvas =
+        document.getElementById(
+            "categoryChart"
+        );
+
+
+    if (categoryChart) {
+
+        categoryChart.destroy();
+
+    }
+
+
+    categoryChart =
+        new Chart(
+            canvas,
+            {
+
+                type: "bar",
+
+                data: {
+
+                    labels: [
+
+                        "Toxic",
+                        "Obscene",
+                        "Insult",
+                        "Threat",
+                        "Identity Hate",
+                        "Severe Toxic"
+
+                    ],
+
+                    datasets: [{
+
+                        label:
+                            "Comments",
+
+                        data: [
+
+                            categories.toxic,
+
+                            categories.obscene,
+
+                            categories.insult,
+
+                            categories.threat,
+
+                            categories.identity_hate,
+
+                            categories.severe_toxic
+
+                        ],
+
+                        backgroundColor: [
+
+                            "#dc2626",
+                            "#f97316",
+                            "#eab308",
+                            "#8b5cf6",
+                            "#ec4899",
+                            "#7f1d1d"
+
+                        ],
+
+                        borderRadius: 8
+
+                    }]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    scales: {
+
+                        y: {
+
+                            beginAtZero: true,
+
+                            ticks: {
+                                precision: 0
+                            }
+
+                        }
+
+                    },
+
+                    plugins: {
+
+                        legend: {
+                            display: false
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+   DISPLAY INDIVIDUAL COMMENTS
+========================================================= */
+
+function displayComments(comments) {
+
+    const container =
+        document.getElementById(
+            "commentsContainer"
+        );
+
+
+    container.innerHTML = "";
+
+
+    /*
+       Show the first 100 comments to avoid
+       making the browser unnecessarily heavy.
+    */
+
+    const limitedComments =
+        comments.slice(0, 100);
+
+
+    limitedComments.forEach(
+        function(comment) {
+
+            const item =
+                document.createElement(
+                    "div"
+                );
+
+
+            const isToxic =
+                comment.prediction === "Toxic";
+
+
+            item.className =
+                isToxic
+                ? "comment-item toxic"
+                : "comment-item";
+
+
+            const text =
+                document.createElement(
+                    "div"
+                );
+
+
+            text.className =
+                "comment-text";
+
+
+            text.textContent =
+                comment.text || "";
+
+
+            const meta =
+                document.createElement(
+                    "div"
+                );
+
+
+            meta.className =
+                "comment-meta";
+
+
+            const status =
+                document.createElement(
+                    "span"
+                );
+
+
+            status.className =
+                isToxic
+                ? "status-pill status-toxic"
+                : "status-pill status-safe";
+
+
+            status.textContent =
+                comment.prediction ||
+                "Non-Toxic";
+
+
+            const confidence =
+                document.createElement(
+                    "span"
+                );
+
+
+            confidence.textContent =
+                "Confidence: " +
+                Number(
+                    comment.confidence || 0
+                ).toFixed(2) +
+                "%";
+
+
+            meta.appendChild(status);
+
+            meta.appendChild(confidence);
+
+
+            if (
+                comment.categories &&
+                comment.categories.trim()
+            ) {
+
+                const categories =
+                    document.createElement(
+                        "span"
+                    );
+
+                categories.textContent =
+                    "Categories: " +
+                    comment.categories;
+
+                meta.appendChild(
+                    categories
+                );
+
+            }
+
+
+            item.appendChild(text);
+
+            item.appendChild(meta);
+
+
+            container.appendChild(item);
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   AI INSIGHT
+========================================================= */
+
+function generateInsight(
+    total,
+    toxic,
+    nonToxic,
+    toxicPercentage,
+    categories
+) {
+
+    let title = "";
+
+    let text = "";
+
+
+    if (toxicPercentage < 5) {
+
+        title =
+            "Low Toxicity Detected";
+
+
+        text =
+            "Out of " +
+            total +
+            " analyzed comments, " +
+            toxic +
+            " were classified as toxic and " +
+            nonToxic +
+            " were classified as non-toxic. " +
+            "The toxicity rate is only " +
+            toxicPercentage.toFixed(2) +
+            "%.";
+
+    }
+
+    else if (toxicPercentage < 15) {
+
+        title =
+            "Moderate Toxicity Detected";
+
+
+        text =
+            "Out of " +
+            total +
+            " analyzed comments, " +
+            toxic +
+            " were classified as toxic and " +
+            nonToxic +
+            " were classified as non-toxic. " +
+            "Some comments may require moderation.";
+
+    }
+
+    else {
+
+        title =
+            "High Toxicity Detected";
+
+
+        text =
+            "Out of " +
+            total +
+            " analyzed comments, " +
+            toxic +
+            " were classified as toxic. " +
+            "The comment section contains a significant amount of potentially harmful content.";
+
+    }
+
+
+    const detectedCategories = [];
+
+
+    if (categories.insult > 0) {
+
+        detectedCategories.push(
+            "Insult: " +
+            categories.insult
+        );
+
+    }
+
+
+    if (categories.obscene > 0) {
+
+        detectedCategories.push(
+            "Obscene: " +
+            categories.obscene
+        );
+
+    }
+
+
+    if (categories.threat > 0) {
+
+        detectedCategories.push(
+            "Threat: " +
+            categories.threat
+        );
+
+    }
+
+
+    if (categories.identity_hate > 0) {
+
+        detectedCategories.push(
+            "Identity Hate: " +
+            categories.identity_hate
+        );
+
+    }
+
+
+    if (categories.severe_toxic > 0) {
+
+        detectedCategories.push(
+            "Severe Toxic: " +
+            categories.severe_toxic
+        );
+
+    }
+
+
+    if (detectedCategories.length > 0) {
+
+        text +=
+            " Detected categories include " +
+            detectedCategories.join(", ") +
+            ".";
+
+    }
+
+
+    document.getElementById(
+        "insightTitle"
+    ).textContent =
+        title;
+
+
+    document.getElementById(
+        "insightText"
+    ).textContent =
+        text;
+
+}
+
+
+/* =========================================================
+   PAGE LOAD
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+        /*
+           Do not automatically show an old result
+           if there is no previous analysis.
+        */
+
+        loadSummary();
+
+    }
+);
+
+</script>
+
+</body>
+
+</html>

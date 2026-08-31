@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: hate-speech-toxicity-detector
+    env: docker
+    dockerfilePath: ./deployment/Dockerfile
+    envVars:
+      - key: MODEL_PATH
+        value: models/final_model
+      - key: PREDICTION_THRESHOLD
+        value: "0.50"
+      - key: MAX_LENGTH
+        value: "128"

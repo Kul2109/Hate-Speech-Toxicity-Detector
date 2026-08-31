@@ -1,0 +1,912 @@
+{% extends "base.html" %}
+
+{% block title %}History | Hate Speech Toxicity Detector{% endblock %}
+
+{% block page_header %}
+
+<div>
+    <h2>Analysis History</h2>
+
+    <p class="header-subtitle">
+        View your previous text, CSV and analysis activity.
+    </p>
+</div>
+
+{% endblock %}
+
+
+{% block content %}
+
+<style>
+
+    .history-page {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* =========================================================
+       HEADER
+       ========================================================= */
+
+    .history-intro {
+        margin-bottom: 25px;
+    }
+
+    .history-intro .pill {
+        display: inline-block;
+        background: #eef2ff;
+        color: #4338ca;
+        padding: 7px 13px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: .5px;
+        margin-bottom: 12px;
+    }
+
+    .history-intro h1 {
+        margin: 0 0 8px;
+        color: #111827;
+        font-size: 30px;
+    }
+
+    .history-intro p {
+        margin: 0;
+        color: #6b7280;
+    }
+
+
+    /* =========================================================
+       STATISTICS
+       ========================================================= */
+
+    .history-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin-bottom: 25px;
+    }
+
+    .history-stat {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: 0 6px 20px rgba(0,0,0,.07);
+    }
+
+    .history-stat-label {
+        color: #6b7280;
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .history-stat-value {
+        font-size: 30px;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .history-stat-value.blue {
+        color: #2563eb;
+    }
+
+    .history-stat-value.red {
+        color: #dc2626;
+    }
+
+    .history-stat-value.green {
+        color: #16a34a;
+    }
+
+    .history-stat-value.purple {
+        color: #7c3aed;
+    }
+
+
+    /* =========================================================
+       FILTER BAR
+       ========================================================= */
+
+    .filter-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 20px;
+        margin-bottom: 22px;
+        box-shadow: 0 6px 20px rgba(0,0,0,.06);
+    }
+
+    .filter-form {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .filter-input,
+    .filter-select {
+        padding: 11px 13px;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        font-size: 14px;
+        background: white;
+        color: #111827;
+    }
+
+    .filter-input {
+        min-width: 260px;
+    }
+
+    .filter-select {
+        min-width: 150px;
+    }
+
+    .filter-input:focus,
+    .filter-select:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99,102,241,.1);
+    }
+
+    .filter-btn {
+        border: none;
+        background: #111827;
+        color: white;
+        padding: 11px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 700;
+    }
+
+    .filter-btn:hover {
+        background: #1f2937;
+    }
+
+    .clear-btn {
+        text-decoration: none;
+        padding: 10px 15px;
+        border-radius: 10px;
+        background: #f3f4f6;
+        color: #374151;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .clear-btn:hover {
+        background: #e5e7eb;
+    }
+
+
+    /* =========================================================
+       HISTORY TABLE
+       ========================================================= */
+
+    .history-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: 0 6px 20px rgba(0,0,0,.07);
+    }
+
+    .history-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 18px;
+        gap: 15px;
+    }
+
+    .history-card-header h3 {
+        margin: 0 0 5px;
+        color: #111827;
+    }
+
+    .history-card-header p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    .table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 850px;
+    }
+
+    .history-table th {
+        background: #f9fafb;
+        color: #6b7280;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+        text-align: left;
+        padding: 14px;
+        white-space: nowrap;
+    }
+
+    .history-table td {
+        padding: 14px;
+        border-top: 1px solid #e5e7eb;
+        color: #374151;
+        font-size: 14px;
+        vertical-align: middle;
+    }
+
+    .history-table tbody tr:hover {
+        background: #fafafa;
+    }
+
+
+    /* =========================================================
+       TEXT PREVIEW
+       ========================================================= */
+
+    .text-preview {
+        max-width: 380px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: #111827;
+    }
+
+
+    /* =========================================================
+       BADGES
+       ========================================================= */
+
+    .badge {
+        display: inline-block;
+        padding: 6px 11px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .badge-toxic {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .badge-safe {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .badge-source {
+        background: #eef2ff;
+        color: #4338ca;
+    }
+
+    .badge-language {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+
+    /* =========================================================
+       EMPTY STATE
+       ========================================================= */
+
+    .empty-state {
+        text-align: center;
+        padding: 65px 20px;
+        color: #6b7280;
+    }
+
+    .empty-icon {
+        width: 70px;
+        height: 70px;
+        margin: 0 auto 18px;
+        border-radius: 50%;
+        background: #eef2ff;
+        color: #4f46e5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        font-weight: 800;
+    }
+
+    .empty-state h3 {
+        margin: 0 0 8px;
+        color: #111827;
+    }
+
+    .empty-state p {
+        margin: 0 0 20px;
+    }
+
+    .empty-action {
+        display: inline-block;
+        text-decoration: none;
+        background: #111827;
+        color: white;
+        padding: 11px 18px;
+        border-radius: 10px;
+        font-weight: 700;
+    }
+
+    .empty-action:hover {
+        background: #1f2937;
+    }
+
+
+    /* =========================================================
+       PAGINATION
+       ========================================================= */
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin-top: 25px;
+        flex-wrap: wrap;
+    }
+
+    .page-link {
+        text-decoration: none;
+        padding: 8px 13px;
+        border-radius: 8px;
+        background: #f3f4f6;
+        color: #374151;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .page-link:hover {
+        background: #e5e7eb;
+    }
+
+    .page-current {
+        background: #111827;
+        color: white;
+    }
+
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media(max-width: 1000px) {
+
+        .history-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+    }
+
+
+    @media(max-width: 600px) {
+
+        .history-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .history-intro h1 {
+            font-size: 24px;
+        }
+
+        .filter-input {
+            min-width: 100%;
+        }
+
+        .filter-select {
+            width: 100%;
+        }
+
+        .filter-btn,
+        .clear-btn {
+            width: 100%;
+            text-align: center;
+        }
+
+    }
+
+</style>
+
+
+<div class="history-page">
+
+
+    <!-- =====================================================
+         INTRO
+         ===================================================== -->
+
+    <div class="history-intro">
+
+        <span class="pill">
+            PERSONAL ACTIVITY
+        </span>
+
+        <h1>
+            Your Analysis History
+        </h1>
+
+        <p>
+            Review your previous toxicity predictions and analysis activity.
+        </p>
+
+    </div>
+
+
+    <!-- =====================================================
+         STATISTICS
+         ===================================================== -->
+
+    {% set total_history = history|length %}
+
+    {% set toxic_history =
+        history
+        |selectattr('prediction', 'equalto', 'Toxic')
+        |list
+        |length
+    %}
+
+    {% set safe_history =
+        history
+        |selectattr('prediction', 'equalto', 'Non-Toxic')
+        |list
+        |length
+    %}
+
+
+    <div class="history-stats">
+
+        <div class="history-stat">
+
+            <div class="history-stat-label">
+                Total Predictions
+            </div>
+
+            <div class="history-stat-value blue">
+                {{ total_history }}
+            </div>
+
+        </div>
+
+
+        <div class="history-stat">
+
+            <div class="history-stat-label">
+                Toxic
+            </div>
+
+            <div class="history-stat-value red">
+                {{ toxic_history }}
+            </div>
+
+        </div>
+
+
+        <div class="history-stat">
+
+            <div class="history-stat-label">
+                Non-Toxic
+            </div>
+
+            <div class="history-stat-value green">
+                {{ safe_history }}
+            </div>
+
+        </div>
+
+
+        <div class="history-stat">
+
+            <div class="history-stat-label">
+                Toxicity Rate
+            </div>
+
+            <div class="history-stat-value purple">
+
+                {% if total_history > 0 %}
+
+                    {{ ((toxic_history / total_history) * 100)|round(1) }}%
+
+                {% else %}
+
+                    0%
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         FILTER
+         ===================================================== -->
+
+    <div class="filter-card">
+
+        <form
+            method="GET"
+            action="{{ url_for('history') }}"
+            class="filter-form"
+        >
+
+            <input
+                type="text"
+                name="search"
+                class="filter-input"
+                placeholder="Search analyzed text..."
+                value="{{ request.args.get('search', '') }}"
+            >
+
+
+            <select
+                name="prediction"
+                class="filter-select"
+            >
+
+                <option value="">
+                    All Results
+                </option>
+
+                <option
+                    value="Toxic"
+                    {% if request.args.get('prediction') == 'Toxic' %}
+                        selected
+                    {% endif %}
+                >
+                    Toxic
+                </option>
+
+                <option
+                    value="Non-Toxic"
+                    {% if request.args.get('prediction') == 'Non-Toxic' %}
+                        selected
+                    {% endif %}
+                >
+                    Non-Toxic
+                </option>
+
+            </select>
+
+
+            <select
+                name="source"
+                class="filter-select"
+            >
+
+                <option value="">
+                    All Sources
+                </option>
+
+                <option
+                    value="text"
+                    {% if request.args.get('source') == 'text' %}
+                        selected
+                    {% endif %}
+                >
+                    Text
+                </option>
+
+                <option
+                    value="csv"
+                    {% if request.args.get('source') == 'csv' %}
+                        selected
+                    {% endif %}
+                >
+                    CSV
+                </option>
+
+                <option
+                    value="youtube"
+                    {% if request.args.get('source') == 'youtube' %}
+                        selected
+                    {% endif %}
+                >
+                    YouTube
+                </option>
+
+            </select>
+
+
+            <button
+                type="submit"
+                class="filter-btn"
+            >
+                Filter
+            </button>
+
+
+            <a
+                href="{{ url_for('history') }}"
+                class="clear-btn"
+            >
+                Clear
+            </a>
+
+        </form>
+
+    </div>
+
+
+    <!-- =====================================================
+         HISTORY
+         ===================================================== -->
+
+    <div class="history-card">
+
+        <div class="history-card-header">
+
+            <div>
+
+                <h3>
+                    Previous Predictions
+                </h3>
+
+                <p>
+                    Your latest analysis records are shown below.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        {% if history %}
+
+        <div class="table-wrapper">
+
+            <table class="history-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            #
+                        </th>
+
+                        <th>
+                            Text
+                        </th>
+
+                        <th>
+                            Result
+                        </th>
+
+                        <th>
+                            Confidence
+                        </th>
+
+                        <th>
+                            Source
+                        </th>
+
+                        <th>
+                            Language
+                        </th>
+
+                        <th>
+                            Date
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for item in history %}
+
+                    <tr>
+
+                        <!-- NUMBER -->
+
+                        <td>
+                            {{ loop.index }}
+                        </td>
+
+
+                        <!-- TEXT -->
+
+                        <td>
+
+                            <div
+                                class="text-preview"
+                                title="{{ item.input_text }}"
+                            >
+                                {{ item.input_text }}
+                            </div>
+
+                        </td>
+
+
+                        <!-- RESULT -->
+
+                        <td>
+
+                            {% if item.prediction == "Toxic" %}
+
+                                <span class="badge badge-toxic">
+                                    ● Toxic
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge badge-safe">
+                                    ● Non-Toxic
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- CONFIDENCE -->
+
+                        <td>
+
+                            {% if item.confidence is not none %}
+
+                                {{ (item.confidence * 100)|round(1) }}%
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- SOURCE -->
+
+                        <td>
+
+                            <span class="badge badge-source">
+
+                                {{ (item.source or "text")|upper }}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- LANGUAGE -->
+
+                        <td>
+
+                            <span class="badge badge-language">
+
+                                {{ (item.language or "en")|upper }}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- DATE -->
+
+                        <td>
+
+                            {{ item.created_at or "—" }}
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- =================================================
+             PAGINATION
+             ================================================= -->
+
+        {% if pagination %}
+
+        <div class="pagination">
+
+            {% if pagination.has_prev %}
+
+                <a
+                    class="page-link"
+                    href="{{ url_for('history', page=pagination.prev_num) }}"
+                >
+                    ← Previous
+                </a>
+
+            {% endif %}
+
+
+            {% for page_num in pagination.iter_pages() %}
+
+                {% if page_num %}
+
+                    {% if page_num == pagination.page %}
+
+                        <span class="page-link page-current">
+                            {{ page_num }}
+                        </span>
+
+                    {% else %}
+
+                        <a
+                            class="page-link"
+                            href="{{ url_for('history', page=page_num) }}"
+                        >
+                            {{ page_num }}
+                        </a>
+
+                    {% endif %}
+
+                {% endif %}
+
+            {% endfor %}
+
+
+            {% if pagination.has_next %}
+
+                <a
+                    class="page-link"
+                    href="{{ url_for('history', page=pagination.next_num) }}"
+                >
+                    Next →
+                </a>
+
+            {% endif %}
+
+        </div>
+
+        {% endif %}
+
+
+        {% else %}
+
+        <!-- =================================================
+             EMPTY HISTORY
+             ================================================= -->
+
+        <div class="empty-state">
+
+            <div class="empty-icon">
+                🕘
+            </div>
+
+            <h3>
+                No analysis history yet
+            </h3>
+
+            <p>
+                Your predictions will appear here after you analyze text or CSV data.
+            </p>
+
+            <a
+                href="{{ url_for('predict') }}"
+                class="empty-action"
+            >
+                Start Text Analysis
+            </a>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+
+</div>
+
+{% endblock %}
