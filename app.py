@@ -5109,69 +5109,29 @@ def inject_globals():
 
     }
 
-
-# ============================================================
-# RUN APPLICATION
-# ============================================================
-
-if __name__ == "__main__":
-
-    print("=" * 70)
-
-    print(
-      "Hate Speech Toxicity Detector Server"
-    )
-
-    print("=" * 70)
-
-    print(
-        "Dashboard : http://127.0.0.1:5000/dashboard"
-    )
-
-    print(
-        "Login     : http://127.0.0.1:5000/login"
-    )
-
-    print(
-        "Register  : http://127.0.0.1:5000/register"
-    )
-
-    print(
-        "Predict   : http://127.0.0.1:5000/predict"
-    )
-
-    print(
-        "Upload    : http://127.0.0.1:5000/upload"
-    )
-
-    print(
-        "YouTube   : http://127.0.0.1:5000/youtube"
-    )
-
-    print(
-        "Twitter   : http://127.0.0.1:5000/twitter"
-    )
-
-    print(
-        "History   : http://127.0.0.1:5000/history"
-    )
-
-    print(
-        "Profile   : http://127.0.0.1:5000/profile"
-    )
-
-    print(
-        "Health    : http://127.0.0.1:5000/health"
-    )
-
-    print("=" * 70)
-
 # ============================================================
 # RUN APPLICATION
 # ============================================================
 
 if __name__ == "__main__":
     import os
+
+    print("=" * 70)
+    print("Hate Speech Toxicity Detector Server")
+    print("=" * 70)
+
+    print("Dashboard : http://127.0.0.1:5000/dashboard")
+    print("Login     : http://127.0.0.1:5000/login")
+    print("Register  : http://127.0.0.1:5000/register")
+    print("Predict   : http://127.0.0.1:5000/predict")
+    print("Upload    : http://127.0.0.1:5000/upload")
+    print("YouTube   : http://127.0.0.1:5000/youtube")
+    print("Twitter   : http://127.0.0.1:5000/twitter")
+    print("History   : http://127.0.0.1:5000/history")
+    print("Profile   : http://127.0.0.1:5000/profile")
+    print("Health    : http://127.0.0.1:5000/health")
+
+    print("=" * 70)
 
     port = int(os.environ.get("PORT", 5000))
 
