@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block page_header %}
+<div>
+    <h1>Profile</h1>
+    <p>View your account information and activity.</p>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div style="max-width: 800px; margin: 0 auto;">
+
+    <div class="card" style="padding: 30px; margin-bottom: 20px;">
+        <div style="text-align: center; margin-bottom: 25px;">
+            <div style="
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                background: #e9ecef;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 15px;
+                font-size: 32px;
+                font-weight: bold;
+            ">
+                {{ (user.username or 'U')[0]|upper }}
+            </div>
+
+            <h2>{{ user.username or 'User' }}</h2>
+            <p>{{ user.email or 'No email available' }}</p>
+        </div>
+
+        <hr>
+
+        <h3>Account Information</h3>
+
+        <div style="margin-top: 20px;">
+            <p>
+                <strong>Username:</strong>
+                {{ user.username or 'Not available' }}
+            </p>
+
+            <p>
+                <strong>Email:</strong>
+                {{ user.email or 'Not available' }}
+            </p>
+
+            <p>
+                <strong>Account Status:</strong>
+                <span style="color: green;">Active</span>
+            </p>
+        </div>
+    </div>
+
+    <div class="card" style="padding: 30px;">
+        <h3>Quick Links</h3>
+
+        <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+
+            <a href="{{ url_for('dashboard') }}"
+               class="btn btn-primary">
+                Dashboard
+            </a>
+
+            <a href="{{ url_for('history') }}"
+               class="btn btn-secondary">
+                Analysis History
+            </a>
+
+            <a href="{{ url_for('logout') }}"
+               class="btn btn-danger">
+                Logout
+            </a>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
