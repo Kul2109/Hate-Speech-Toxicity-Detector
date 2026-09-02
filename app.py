@@ -518,6 +518,14 @@ def login_required(view_function):
 
         if "user_id" not in session:
 
+            # API requests should receive JSON, not the login HTML page
+            if request.path.startswith("/api/"):
+                return jsonify({
+                    "success": False,
+                    "error": "Please login to access this feature."
+                }), 401
+
+            # Normal website pages continue to redirect to login
             flash(
                 "Please login to access this page.",
                 "warning"
@@ -533,7 +541,6 @@ def login_required(view_function):
         )
 
     return wrapped_view
-
 
 # ============================================================
 # CURRENT USER
