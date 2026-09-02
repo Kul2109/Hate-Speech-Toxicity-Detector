@@ -1924,7 +1924,9 @@ document.addEventListener(
            if there is no previous analysis.
         */
 
-        loadSummary();
+        if (window.location.pathname === "/dashboard") {
+           loadSummary();
+      }
 
     }
 );
