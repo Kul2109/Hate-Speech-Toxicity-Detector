@@ -1303,10 +1303,7 @@ def index():
             url_for("dashboard")
         )
 
-
-    return render_template(
-        "index.html"
-    )
+    return redirect(url_for("login"))
 
 
 # ============================================================
