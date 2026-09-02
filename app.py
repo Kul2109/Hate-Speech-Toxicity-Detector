@@ -135,6 +135,10 @@ app.secret_key = os.getenv(
     "hate-speech-toxicity-detector-development-secret-key-change-this"
 )
 
+app.config["SESSION_COOKIE_SECURE"] = True
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+
 app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024
 
 
