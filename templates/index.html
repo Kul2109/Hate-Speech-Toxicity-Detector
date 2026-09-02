@@ -1144,13 +1144,17 @@ async function loadSummary() {
     try {
 
         const response =
-            await fetch(
-                "/api/youtube/summary"
-            );
+    await fetch(
+        "/api/youtube/summary"
+    );
 
+     if (response.status === 401) {
+    loading.classList.add("hidden");
+    return;
+}
 
         const data =
-            await response.json();
+    await response.json();
 
 
         if (!response.ok || !data.success) {
