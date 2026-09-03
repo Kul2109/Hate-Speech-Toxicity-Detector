@@ -9,6 +9,7 @@ import sqlite3
 import traceback
 import time
 import httplib2
+from huggingface_hub import snapshot_download
 
 from datetime import datetime
 from functools import wraps
@@ -160,13 +161,27 @@ DATABASE = os.path.join(
 # MODEL CONFIGURATION
 # ============================================================
 
+HF_REPO_ID = "ummekulsum2109/hatespeechtoxicitydetector-models"
+
 MODEL_PATH = os.getenv(
     "MODEL_PATH",
-    os.path.join(
-        BASE_DIR,
+    os.path.join(BASE_DIR, "final_distilbert_toxicity_model")
+)
+
+if not os.path.exists(MODEL_PATH):
+    print("[MODEL] Local model not found. Downloading from Hugging Face...")
+
+    HF_CACHE_PATH = snapshot_download(
+        repo_id=HF_REPO_ID,
+        allow_patterns=["final_distilbert_toxicity_model/*"]
+    )
+
+    MODEL_PATH = os.path.join(
+        HF_CACHE_PATH,
         "final_distilbert_toxicity_model"
     )
-)
+
+print("[MODEL] Model path:", MODEL_PATH)
 
 DEVICE = torch.device(
     "cuda" if torch.cuda.is_available() else "cpu"
